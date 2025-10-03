@@ -8,4 +8,4 @@ Expanding on the uploading sensitive data to OSINT, I want to explore the concep
 Another aspect that I will have to research is the sandbox detection/defence evasion tactics that advanced threat actors put in place to avoid analysis, also escaping contained environments. I will try and cover defence evasion in my research process, as its important to understand how a threat actor can avoid reverse engineering.
  
 The aim of this project ultimately is to mitigate the risk of the user downloading malware onto their machine locally, to make it easier to gather data about files that are shared for phishing purposes, during an investigation for an analyst, and finally to understand concepts of malware analysis, and what a malicious file does upon execution. This will all be achieved through the use of static analysis tools, dynamic analysis tools, and open source intelligence (OSINT), all in one place, in one extension at the ready for the user to complete an investigation and prevent phishing attempts with little to no risk.
-<img width="881" height="1865" alt="image" src="https://github.com/user-attachments/assets/165d3f86-ad10-44c4-b4f4-3edd9ecf98a4" />
+
