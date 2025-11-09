@@ -2,7 +2,7 @@
 
 Official website - https://analysit.neocities.org
 
-# Email Attachment Analyzer - Outlook Add-in
+## Email Attachment Analyzer - Outlook Add-in
 
 ## Overview
 This is an Outlook add-in built with React + TypeScript that integrates FLARE tools for static malware analysis of email attachments.
