@@ -1,11 +1,138 @@
 # Final Year Project
 
-This email add on will allow the user that is investigating a potential malicious attachment/executable to run through CLI FLARE tools through an add on/extension for the email application, without the need for the user to download the malicious file onto their endpoint. From the beginning of my journey in cybersecurity, I found that malware analysis fascinates me greatly, so I want to incorporate the steps used to analyse malware both statically and dynamically and make it openly available for anyone to learn, as some may find using a command line to run tools quite difficult. With the tools available at the click of a button, I hope to make the process for users enlightening and straightforward. In the beginning stages, I will scope out multiple email platforms (ie. Gmail, Outlook & Yahoo Mail) to see which is best suited for what I want to build, which supports external resources and libraries that I want to use. I also want to explore the vast amount of tools that are openly available for file analysis, and identify which are the most integral when investigating potentially malicious files. Sandbox environment integration will also be explored and researched. Another platform that I want to research is joe’s sandbox for this. Alongside that, ANY.RUN reports is another resource that I want to explore in my project in terms of malware simulation. I feel that it is important in an investigation for malware, that users understand what happens when they execute a file, what processes spawn and what modifications are made etc. I want to integrate threat intelligence FLARE analysis tools into the extension using the specific language that is used to build and create extensions, and also implement GUI /Frontend aspects so that the process is completed at the click of a button. The general purpose and scope of this project is to give the user a place where all analysis tools are readily available without the need to download/install anything else, giving a detailed output of file metadata/processes upon execution and other related details such as embedded contents/code instantly.
-Another aspect I want to cover and implement is OSINT, open source intelligence, and the risks related with potentially uploading files from a corporate environment fed into OSINT. I want to include a feature that gives the user information that is gathered from OSINT platforms. I also want to implement a form of dynamic analysis for attachment that contain embedded code/are malicious executables, so that the user can observe and understand what occurs upon execution.
-I will have to research the languages that are used to build email extensions, Gmail add-ons are primarily developed using JavaScript and TypeScript for the frontend UI, with the backend often leveraging Google Apps Script (also JavaScript-based) or making calls to custom backend services via the Gmail API. For the Gmail API, any language with an HTTP client library, such as Java, Go, or Python, can be used.
-I will also have to research on how to link the tools for static dynamic analysis into the extension aspect of the project, while researching both separately, they require to be interlinked so that the project runs as intended and is able to run and import the tools being used.
-Expanding on the uploading sensitive data to OSINT, I want to explore the concept of giving adversaries the ability to recon by uploading sensitive data to public platforms for open source intelligence. One idea I have is that the user will get a warning if the file hash detected in the extension does not match a publicly known malware file hash, and before that they will also receive a warning, alerting the user that if they upload sensitive files (such as company records, etc.) that they risk giving external actors sensitive information. The concept still needs refining and research so that is something I will need to research.
-Another aspect that I will have to research is the sandbox detection/defence evasion tactics that advanced threat actors put in place to avoid analysis, also escaping contained environments. I will try and cover defence evasion in my research process, as its important to understand how a threat actor can avoid reverse engineering.
- 
-The aim of this project ultimately is to mitigate the risk of the user downloading malware onto their machine locally, to make it easier to gather data about files that are shared for phishing purposes, during an investigation for an analyst, and finally to understand concepts of malware analysis, and what a malicious file does upon execution. This will all be achieved through the use of static analysis tools, dynamic analysis tools, and open source intelligence (OSINT), all in one place, in one extension at the ready for the user to complete an investigation and prevent phishing attempts with little to no risk.
+Official website - https://analysit.neocities.org
+
+## Email Attachment Analyzer - Outlook Add-in
+
+## Overview
+This is an Outlook add-in built with React + TypeScript that integrates FLARE tools for static malware analysis of email attachments.
+
+## Technology Stack
+- **Frontend**: React + TypeScript (TSX)
+- **Office Integration**: Office.js API
+- **UI**: Tailwind CSS + shadcn/ui components
+- **Backend** (to be implemented): Node.js/Python API running FLARE tools
+
+## How It Works
+
+### Current Implementation (Frontend)
+1. Uses Office.js to access Outlook context and email attachments
+2. Lists available attachments from the current email
+3. Allows user to select an attachment for analysis
+4. Displays mock analysis results in user-friendly format
+
+
+#### Backend Flow:
+1. **Receive Attachment Data**: Get attachment content from Office.js
+2. **Upload to Sandbox**: Send file to isolated analysis environment
+3. **Run FLARE Tools**:
+   - `file` command for file type identification
+   - `pefile` for PE structure analysis
+   - `FLOSS` (FireEye Labs Obfuscated String Solver) for string extraction
+   - `CAPA` for capability detection
+   - Custom scripts for hash calculation, entropy analysis
+4. **Parse Results**: Convert CLI output to JSON
+5. **Return to Frontend**: Display in user-friendly interface
+
+## Office.js Integration
+
+### Key APIs Used:
+```javascript
+// Initialize Office
+Office.onReady(() => {
+  // Access current email
+  const item = Office.context.mailbox.item;
+  
+  // Get attachments
+  const attachments = item.attachments;
+  
+  // Get attachment content
+  item.getAttachmentContentAsync(attachmentId, (result) => {
+    // Send to backend for analysis
+  });
+});
+```
+
+## File Structure
+```
+/App.tsx                          # Main component with Office.js integration
+/hooks/useOfficeContext.ts        # Custom hook for Office.js initialization
+/components/
+  - AttachmentSelector.tsx        # Lists and selects attachments
+  - AnalysisOverview.tsx          # Shows file hashes, type, threat level
+  - FlareToolsPanel.tsx           # Tabs for different FLARE tools
+  - StringsAnalysis.tsx           # FLOSS output display
+  - CapabilitiesAnalysis.tsx      # CAPA results (MITRE ATT&CK)
+  - PEAnalysis.tsx                # PE structure information
+  - ImportsAnalysis.tsx           # IAT analysis
+/manifest.xml                     # Outlook add-in manifest
+```
+
+## Development vs Production
+
+### Development Mode (Current):
+- Runs in browser without Office.js
+- Uses mock attachment data
+- Shows UI and workflow
+
+### Production Mode (Real Outlook):
+1. Serve app over HTTPS (required by Office.js)
+2. Load manifest.xml into Outlook
+3. Office.js provides real email context
+4. Connect to backend API for actual analysis
+
+## In progress
+
+### 1. Backend API Development
+ Python (recommended for FLARE tools):
+```python
+# Example Flask API
+from flask import Flask, request, jsonify
+import pefile
+import subprocess
+
+@app.route('/analyze', methods=['POST'])
+def analyze_file():
+    file_data = request.files['file']
+    
+    # Run FLARE tools
+    floss_output = run_floss(file_data)
+    capa_output = run_capa(file_data)
+    pe_info = analyze_pe(file_data)
+    
+    return jsonify({
+        'strings': floss_output,
+        'capabilities': capa_output,
+        'pe_structure': pe_info
+    })
+```
+
+### 2. Security Considerations
+- Run analysis in Docker container or VM
+- Never execute attachments directly
+- Implement rate limiting
+- Add authentication for API
+- Sanitize all inputs
+
+### 3. Testing Strategy
+- Use both Outlook Desktop and Outlook Web
+- Test with various file types (.exe, .dll, .docm, .pdf)
+- Validate against known malware samples 
+
+### 4. Deployment
+- Host frontend on HTTPS server (required)
+- Deploy backend to cloud (AWS, Azure, GCP)
+- Configure CORS for Office.js
+
+### Outlook (Current Choice)
+Full Office.js API for attachments  
+Better for enterprise environments  
+Rich add-in framework  
+Desktop + Web support  
+
+## Resources
+- [Office.js Documentation](https://learn.microsoft.com/en-us/office/dev/add-ins/)
+- [FLARE Tools](https://github.com/mandiant/flare-vm)
+- [CAPA Documentation](https://github.com/mandiant/capa)
+- [FLOSS](https://github.com/mandiant/flare-floss)
 
