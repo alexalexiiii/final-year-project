@@ -1,80 +1,81 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0" xsi:type="MailApp">
-  <Id>54fedd0a-c136-44cd-88d8-2df8b2117735</Id>
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
+  xsi:type="MailApp">
+
+  <!-- Basic Add-in Information -->
+  <Id>12345678-1234-1234-1234-123456789abc</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>Contoso</ProviderName>
+  <ProviderName>SETU Waterford</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="Prototype-FYP"/>
-  <Description DefaultValue="A template to get started."/>
+  <DisplayName DefaultValue="AnalysIT Attachment Analyser" />
+  <Description DefaultValue="Analyze potentially malicious email attachments using FLARE tools without downloading them."/>
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-64.png"/>
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-128.png"/>
-  <SupportUrl DefaultValue="https://www.contoso.com/help"/>
-  <AppDomains>
-    <AppDomain>https://www.contoso.com</AppDomain>
-  </AppDomains>
+  <SupportUrl DefaultValue="https://localhost:3000/support" />
+  
+  <!-- Hosts (Outlook) -->
   <Hosts>
-    <Host Name="Mailbox"/>
+    <Host Name="Mailbox" />
   </Hosts>
+  
   <Requirements>
     <Sets>
-      <Set Name="Mailbox" MinVersion="1.1"/>
+      <Set Name="Mailbox" MinVersion="1.1" />
     </Sets>
   </Requirements>
+  
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://localhost:3000/taskpane.html"/>
-        <RequestedHeight>250</RequestedHeight>
+        <SourceLocation DefaultValue="https://localhost:3000/index.html"/>
+        <RequestedHeight>450</RequestedHeight>
       </DesktopSettings>
     </Form>
   </FormSettings>
-  <Permissions>ReadWriteItem</Permissions>
+
+  <Permissions>ReadWriteMailbox</Permissions>
+  
   <Rule xsi:type="RuleCollection" Mode="Or">
-    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read" />
   </Rule>
+  
   <DisableEntityHighlighting>false</DisableEntityHighlighting>
+
+  <!-- Version Overrides for modern Outlook -->
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
     <Requirements>
       <bt:Sets DefaultMinVersion="1.3">
-        <bt:Set Name="Mailbox"/>
+        <bt:Set Name="Mailbox" />
       </bt:Sets>
     </Requirements>
+    
     <Hosts>
       <Host xsi:type="MailHost">
         <DesktopFormFactor>
-          <FunctionFile resid="Commands.Url"/>
+          <FunctionFile resid="Commands.Url" />
+          
           <ExtensionPoint xsi:type="MessageReadCommandSurface">
             <OfficeTab id="TabDefault">
               <Group id="msgReadGroup">
-                <Label resid="GroupLabel"/>
+                <Label resid="GroupLabel" />
+                
                 <Control xsi:type="Button" id="msgReadOpenPaneButton">
-                  <Label resid="TaskpaneButton.Label"/>
+                  <Label resid="TaskpaneButton.Label" />
                   <Supertip>
-                    <Title resid="TaskpaneButton.Label"/>
-                    <Description resid="TaskpaneButton.Tooltip"/>
+                    <Title resid="TaskpaneButton.Label" />
+                    <Description resid="TaskpaneButton.Tooltip" />
                   </Supertip>
                   <Icon>
-                    <bt:Image size="16" resid="Icon.16x16"/>
-                    <bt:Image size="32" resid="Icon.32x32"/>
-                    <bt:Image size="80" resid="Icon.80x80"/>
+                    <bt:Image size="16" resid="Icon.16x16" />
+                    <bt:Image size="32" resid="Icon.32x32" />
+                    <bt:Image size="80" resid="Icon.80x80" />
                   </Icon>
                   <Action xsi:type="ShowTaskpane">
-                    <SourceLocation resid="Taskpane.Url"/>
-                  </Action>
-                </Control>
-                <Control xsi:type="Button" id="ActionButton">
-                  <Label resid="ActionButton.Label"/>
-                  <Supertip>
-                    <Title resid="ActionButton.Label"/>
-                    <Description resid="ActionButton.Tooltip"/>
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="Icon.16x16"/>
-                    <bt:Image size="32" resid="Icon.32x32"/>
-                    <bt:Image size="80" resid="Icon.80x80"/>
-                  </Icon>
-                  <Action xsi:type="ExecuteFunction">
-                    <FunctionName>action</FunctionName>
+                    <SourceLocation resid="Taskpane.Url" />
                   </Action>
                 </Control>
               </Group>
@@ -83,6 +84,7 @@
         </DesktopFormFactor>
       </Host>
     </Hosts>
+
     <Resources>
       <bt:Images>
         <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
@@ -91,16 +93,14 @@
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/index.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GroupLabel" DefaultValue="Contoso Add-in"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="Show Task Pane"/>
-        <bt:String id="ActionButton.Label" DefaultValue="Perform an action"/>
+        <bt:String id="GroupLabel" DefaultValue="FLARE Analyzer"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Analyze Attachments"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Opens a pane displaying all available properties."/>
-        <bt:String id="ActionButton.Tooltip" DefaultValue="Perform an action when clicked."/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Analyze email attachments for malware using FLARE tools"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
