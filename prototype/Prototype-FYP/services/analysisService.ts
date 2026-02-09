@@ -76,32 +76,7 @@ export async function analyzeAttachment(
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 2000));
   
-  // In production, you would do:
-  /*
-  return new Promise((resolve, reject) => {
-    mailboxItem.getAttachmentContentAsync(attachmentId, (result) => {
-      if (result.status === Office.AsyncResultStatus.Succeeded) {
-        const content = result.value.content; // Base64 encoded
-        
-        // Send to backend API
-        fetch('/api/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            filename, 
-            content,
-            contentType: result.value.format 
-          })
-        })
-        .then(res => res.json())
-        .then(data => resolve(data))
-        .catch(err => reject(err));
-      } else {
-        reject(new Error('Failed to get attachment content'));
-      }
-    });
-  });
-  */
+ 
   
   // Mock data for demonstration
   const threatLevel = determineThreatLevel(filename);
