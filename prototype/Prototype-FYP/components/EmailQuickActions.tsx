@@ -5,7 +5,7 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Checkbox } from './ui/checkbox';
 import { Clock, UserPlus, Flag, Archive, Tag, Send } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export function EmailQuickActions() {
   const [selectedPriority, setSelectedPriority] = useState('');
