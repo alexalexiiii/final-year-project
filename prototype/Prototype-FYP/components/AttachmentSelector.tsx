@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { FileSearch, Play, Loader2 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { analyzeAttachment, validateAttachment } from '../services/analysisService';
 import type { OfficeMailboxItem, OutlookAttachment, AnalysisData } from '../types/analysis';
 
