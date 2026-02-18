@@ -40,9 +40,7 @@ module.exports = async (env, options) => {
         {
           test: /\.[jt]sx?$/,
           exclude: /node_modules/,
-          use: {
-            loader: "babel-loader",
-          },
+          use: { loader: "babel-loader" },
         },
         {
           test: /\.html$/,
@@ -51,9 +49,15 @@ module.exports = async (env, options) => {
         {
           test: /\.(png|jpg|jpeg|gif|ico)$/i,
           type: "asset/resource",
-          generator: {
-            filename: "assets/[name][ext][query]",
-          },
+          generator: { filename: "assets/[name][ext][query]" },
+        },
+        {
+          test: /\.css$/i,
+          use: [
+            "style-loader",   // Inject CSS into DOM
+            "css-loader",     // Resolve imports
+            "postcss-loader", // Process Tailwind @apply, autoprefixer
+          ],
         },
       ],
     },
@@ -65,10 +69,7 @@ module.exports = async (env, options) => {
       }),
       new CopyWebpackPlugin({
         patterns: [
-          {
-            from: "assets/*",
-            to: "assets/[name][ext][query]",
-          },
+          { from: "assets/*", to: "assets/[name][ext][query]" },
           {
             from: "manifest*.xml",
             to: "[name][ext]",
@@ -81,13 +82,8 @@ module.exports = async (env, options) => {
       }),
     ],
     devServer: {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      server: {
-        type: "https",
-        options: httpsOptions,
-      },
+      headers: { "Access-Control-Allow-Origin": "*" },
+      server: { type: "https", options: httpsOptions },
       port: process.env.npm_package_config_dev_server_port || 3000,
     },
   };
