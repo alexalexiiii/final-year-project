@@ -5,7 +5,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 const urlDev = "https://localhost:3000/";
-const urlProd = "https://www.contoso.com/"; // CHANGE THIS TO YOUR PRODUCTION DEPLOYMENT LOCATION
+const urlProd = "https://www.analysit.com/"; // production URL
 
 async function getHttpsOptions() {
   const httpsOptions = await devCerts.getHttpsServerOptions();
@@ -14,23 +14,31 @@ async function getHttpsOptions() {
 
 module.exports = async (env, options) => {
   const dev = options.mode === "development";
-  const config = {
+
+  // Determine HTTPS options safely
+  let httpsOptions;
+  if (env.WEBPACK_BUILD || options.https !== undefined) {
+    httpsOptions = options.https;
+  } else {
+    httpsOptions = await getHttpsOptions();
+  }
+
+  return {
     devtool: "source-map",
     entry: {
-      polyfill: ["core-js/stable", "regenerator-runtime/runtime"],
-      taskpane: ["./src/taskpane/taskpane.js", "./src/taskpane/taskpane.html"],
-      commands: "./src/commands/commands.js",
+      main: "./src/main.tsx", // React entry point
     },
     output: {
       clean: true,
+      filename: "[name].js",
     },
     resolve: {
-      extensions: [".html", ".js"],
+      extensions: [".ts", ".tsx", ".js", ".jsx", ".html"],
     },
     module: {
       rules: [
         {
-          test: /\.js$/,
+          test: /\.[jt]sx?$/,
           exclude: /node_modules/,
           use: {
             loader: "babel-loader",
@@ -38,11 +46,10 @@ module.exports = async (env, options) => {
         },
         {
           test: /\.html$/,
-          exclude: /node_modules/,
           use: "html-loader",
         },
         {
-          test: /\.(png|jpg|jpeg|gif|ico)$/,
+          test: /\.(png|jpg|jpeg|gif|ico)$/i,
           type: "asset/resource",
           generator: {
             filename: "assets/[name][ext][query]",
@@ -52,9 +59,9 @@ module.exports = async (env, options) => {
     },
     plugins: [
       new HtmlWebpackPlugin({
-        filename: "taskpane.html",
-        template: "./src/taskpane/taskpane.html",
-        chunks: ["polyfill", "taskpane"],
+        filename: "index.html",
+        template: "./public/index.html",
+        chunks: ["main"],
       }),
       new CopyWebpackPlugin({
         patterns: [
@@ -64,21 +71,13 @@ module.exports = async (env, options) => {
           },
           {
             from: "manifest*.xml",
-            to: "[name]" + "[ext]",
+            to: "[name][ext]",
             transform(content) {
-              if (dev) {
-                return content;
-              } else {
-                return content.toString().replace(new RegExp(urlDev, "g"), urlProd);
-              }
+              if (dev) return content;
+              return content.toString().replace(new RegExp(urlDev, "g"), urlProd);
             },
           },
         ],
-      }),
-      new HtmlWebpackPlugin({
-        filename: "commands.html",
-        template: "./src/commands/commands.html",
-        chunks: ["polyfill", "commands"],
       }),
     ],
     devServer: {
@@ -87,11 +86,9 @@ module.exports = async (env, options) => {
       },
       server: {
         type: "https",
-        options: env.WEBPACK_BUILD || options.https !== undefined ? options.https : await getHttpsOptions(),
+        options: httpsOptions,
       },
       port: process.env.npm_package_config_dev_server_port || 3000,
     },
   };
-
-  return config;
 };

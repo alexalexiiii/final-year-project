@@ -31,6 +31,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
+        <!-- React task pane -->
         <SourceLocation DefaultValue="https://localhost:3000/index.html"/>
         <RequestedHeight>450</RequestedHeight>
       </DesktopSettings>
@@ -56,8 +57,9 @@
     <Hosts>
       <Host xsi:type="MailHost">
         <DesktopFormFactor>
-          <FunctionFile resid="Commands.Url" />
+          <!-- Removed FunctionFile / commands -->
           
+          <!-- Ribbon button to open task pane -->
           <ExtensionPoint xsi:type="MessageReadCommandSurface">
             <OfficeTab id="TabDefault">
               <Group id="msgReadGroup">
@@ -92,7 +94,7 @@
         <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
+        <!-- Only React task pane URL -->
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/index.html"/>
       </bt:Urls>
       <bt:ShortStrings>
