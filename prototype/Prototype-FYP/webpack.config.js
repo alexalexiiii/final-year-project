@@ -29,9 +29,10 @@ module.exports = async (env, options) => {
       main: "./src/main.tsx", // React entry point
     },
     output: {
-      clean: true,
-      filename: "[name].js",
-    },
+    clean: true,
+    filename: "[name].js",
+    publicPath: "/",
+ },
     resolve: {
       extensions: [".ts", ".tsx", ".js", ".jsx", ".html"],
     },
@@ -63,8 +64,8 @@ module.exports = async (env, options) => {
     },
     plugins: [
       new HtmlWebpackPlugin({
-        filename: "index.html",
-        template: "./public/index.html",
+        filename: "taskpane.html",
+        template: "./public/taskpane.html",
         chunks: ["main"],
       }),
       new CopyWebpackPlugin({

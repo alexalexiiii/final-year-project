@@ -32,7 +32,7 @@
     <Form xsi:type="ItemRead">
       <DesktopSettings>
         <!-- React task pane -->
-        <SourceLocation DefaultValue="https://localhost:3000/index.html"/>
+        <SourceLocation DefaultValue="https://localhost:3000/taskpane.html"/>
         <RequestedHeight>450</RequestedHeight>
       </DesktopSettings>
     </Form>
