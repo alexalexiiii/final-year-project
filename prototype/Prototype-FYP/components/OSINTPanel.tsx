@@ -10,7 +10,6 @@ import {
   Shield,
   AlertTriangle,
   CheckCircle2,
-  ExternalLink,
   Globe,
   Server,
   Link,
