@@ -95,7 +95,7 @@
       </bt:Images>
       <bt:Urls>
         <!-- Only React task pane URL -->
-        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/index.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="FLARE Analyzer"/>

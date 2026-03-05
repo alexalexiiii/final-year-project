@@ -4,7 +4,8 @@ import { CapabilitiesAnalysis } from './CapabilitiesAnalysis';
 import { PEAnalysis } from './PEAnalysis';
 import { ImportsAnalysis } from './ImportsAnalysis';
 import { RemediationPanel } from './RemediationPanel';
-import { Code2, Layers, FileCode, Download, ShieldAlert } from 'lucide-react';
+import { OSINTPanel } from './OSINTpanel';
+import { Code2, Layers, FileCode, Download, ShieldAlert, Globe } from 'lucide-react';
 import type { FileHash, ThreatLevel } from '../types/analysis';
 
 interface FlareToolsPanelProps {
@@ -12,9 +13,10 @@ interface FlareToolsPanelProps {
   fileHash: FileHash;
   threatLevel: ThreatLevel;
   suspicious: boolean;
+  extractedStrings: string[];
 }
 
-export function FlareToolsPanel({ attachmentName, fileHash, threatLevel, suspicious }: FlareToolsPanelProps) {
+export function FlareToolsPanel({ attachmentName, fileHash, threatLevel, suspicious, extractedStrings }: FlareToolsPanelProps) {
   return (
     <div className="space-y-3">
       <div>
@@ -23,7 +25,7 @@ export function FlareToolsPanel({ attachmentName, fileHash, threatLevel, suspici
       </div>
 
       <Tabs defaultValue="strings" className="w-full">
-        <TabsList className="grid grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-6 w-full">
           <TabsTrigger value="strings" className="gap-1 text-xs">
             <Code2 className="w-3 h-3" />
             Strings
@@ -39,6 +41,10 @@ export function FlareToolsPanel({ attachmentName, fileHash, threatLevel, suspici
           <TabsTrigger value="imports" className="gap-1 text-xs">
             <Download className="w-3 h-3" />
             Imports
+          </TabsTrigger>
+          <TabsTrigger value="osint" className="gap-1 text-xs">
+            <Globe className="w-3 h-3" />
+            OSINT
           </TabsTrigger>
           <TabsTrigger value="remediation" className="gap-1 text-xs">
             <ShieldAlert className="w-3 h-3" />
@@ -60,6 +66,10 @@ export function FlareToolsPanel({ attachmentName, fileHash, threatLevel, suspici
 
         <TabsContent value="imports" className="mt-4">
           <ImportsAnalysis />
+        </TabsContent>
+
+        <TabsContent value="osint" className="mt-4">
+          <OSINTPanel fileHash={fileHash} extractedStrings={extractedStrings} />
         </TabsContent>
 
         <TabsContent value="remediation" className="mt-4">

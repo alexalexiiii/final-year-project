@@ -70,8 +70,7 @@ export default function App() {
                 attachmentName={selectedAttachment}
                 fileHash={analysisData.hash}
                 threatLevel={analysisData.threatLevel}
-                suspicious={analysisData.suspicious}
-              />
+                suspicious={analysisData.suspicious} extractedStrings={[]}              />
             </>
           )}
         </div>

@@ -85,3 +85,81 @@ export interface RemediationRecommendation {
   category: string;
   actions: string[];
 }
+
+// ============= OSINT Types =============
+
+export interface VirusTotalResult {
+  positives: number;
+  total: number;
+  scanDate: string;
+  permalink: string;
+  detections: VTDetection[];
+}
+
+export interface VTDetection {
+  vendor: string;
+  detected: boolean;
+  result: string | null;
+}
+
+export interface AbuseIPDBResult {
+  ipAddress: string;
+  abuseConfidenceScore: number;
+  usageType: string;
+  isp: string;
+  domain: string;
+  countryCode: string;
+  isWhitelisted: boolean;
+  totalReports: number;
+  lastReportedAt: string | null;
+}
+
+export interface URLScanResult {
+  uuid: string;
+  url: string;
+  visibility: string;
+  verdict: {
+    score: number;
+    malicious: boolean;
+    categories: string[];
+  };
+  submitter: {
+    country: string;
+  };
+  page: {
+    domain: string;
+    ip: string;
+    asn: string;
+    asnname: string;
+  };
+  stats: {
+    maliciousRequests: number;
+    totalRequests: number;
+  };
+}
+
+export interface IPInfoResult {
+  ip: string;
+  hostname: string;
+  city: string;
+  region: string;
+  country: string;
+  loc: string; // latitude,longitude
+  org: string;
+  postal: string;
+  timezone: string;
+}
+
+export interface OSINTData {
+  virustotal: VirusTotalResult | null;
+  abuseipdb: AbuseIPDBResult[];
+  urlscan: URLScanResult[];
+  ipinfo: IPInfoResult[];
+  extractedIOCs: {
+    ips: string[];
+    urls: string[];
+    domains: string[];
+    emails: string[];
+  };
+  lastUpdated: string;
+}

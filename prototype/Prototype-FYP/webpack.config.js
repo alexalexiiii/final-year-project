@@ -4,7 +4,7 @@ const devCerts = require("office-addin-dev-certs");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-const urlDev = "https://localhost:3000/";
+const urlDev = "https://localhost:3000/"; // development URL
 const urlProd = "https://www.analysit.com/"; // production URL
 
 async function getHttpsOptions() {

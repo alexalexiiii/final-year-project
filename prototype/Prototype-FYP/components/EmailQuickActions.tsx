@@ -88,7 +88,7 @@ export function EmailQuickActions() {
             <Checkbox 
               id="followup" 
               checked={addFollowUp}
-              onCheckedChange={setAddFollowUp}
+              onCheckedChange={(checked) => setAddFollowUp(checked === true)}
             />
             <label
               htmlFor="followup"
