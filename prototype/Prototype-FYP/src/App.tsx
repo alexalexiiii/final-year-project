@@ -5,7 +5,6 @@ import { FlareToolsPanel } from '../components/FlareToolsPanel';
 import { Shield, AlertCircle } from 'lucide-react';
 import { useOfficeContext } from '../hooks/useOfficeContext';
 import { Toaster } from '../components/ui/sonner';
-import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import type { AnalysisData } from '../types/analysis';
 
 export default function App() {
@@ -16,10 +15,10 @@ export default function App() {
   // Loading state
   if (isLoading || !isOfficeInitialized) {
     return (
-      <div className="h-screen bg-background flex items-center justify-center p-4">
+      <div className="center-screen">
         <div className="text-center">
-          <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Initializing Office add-in...</p>
+          <Shield style={{ width: 48, height: 48, opacity: 0.5, marginBottom: 16 }} />
+          <p className="text-muted">Initializing Office add-in...</p>
         </div>
       </div>
     );
@@ -28,35 +27,38 @@ export default function App() {
   // Error state
   if (error) {
     return (
-      <div className="h-screen bg-background flex items-center justify-center p-4">
-        <Alert variant="destructive" className="max-w-md">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Initialization Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+      <div className="center-screen">
+        <div className="card" style={{ maxWidth: 400 }}>
+          <div className="row" style={{ marginBottom: 8 }}>
+            <AlertCircle style={{ width: 16, height: 16 }} />
+            <h3>Initialization Error</h3>
+          </div>
+          <p>{error}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-background flex flex-col">
+    <div className="app">
       <Toaster />
+
       {/* Header */}
-      <div className="border-b px-4 py-3 bg-gradient-to-r from-red-600 to-orange-600">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-            <Shield className="w-5 h-5 text-red-600" />
+      <div className="header">
+        <div className="header-row">
+          <div className="logo-box">
+            <Shield style={{ width: 20, height: 20, color: "#dc2626" }} />
           </div>
           <div>
-            <h1 className="text-white">AnalysIT Attachment Analyser</h1>
-            <p className="text-xs text-red-50">Static analysis for email attachments</p>
+            <h1>AnalysIT Attachment Analyser</h1>
+            <p className="text-small">Static analysis for email attachments</p>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        <div className="p-4 space-y-4">
+      <div className="main">
+        <div className="content stack">
           <AttachmentSelector 
             mailboxItem={mailboxItem}
             onSelectAttachment={setSelectedAttachment}
@@ -70,7 +72,9 @@ export default function App() {
                 attachmentName={selectedAttachment}
                 fileHash={analysisData.hash}
                 threatLevel={analysisData.threatLevel}
-                suspicious={analysisData.suspicious} extractedStrings={[]}              />
+                suspicious={analysisData.suspicious}
+                extractedStrings={[]}
+              />
             </>
           )}
         </div>
