@@ -1,105 +1,189 @@
-// Service layer for FLARE analysis API calls
-// This prepares the structure for backend integration
-
-import type { AnalysisData, FileHash } from '../types/analysis';
+import type { AnalysisData } from '../types/analysis';
 
 /**
- * Generate mock file hashes
- * In production, this would be calculated server-side from actual file data
+ * BACKEND URL (IMPORTANT: change for production)
  */
-function generateMockHash(filename: string): FileHash {
-  // Simple deterministic hash generation for demo purposes
-  const seed = filename.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  
-  return {
-    md5: `${seed.toString(16).padStart(32, '0').slice(0, 32)}`,
-    sha1: `${seed.toString(16).padStart(40, '0').slice(0, 40)}`,
-    sha256: `${seed.toString(16).padStart(64, '0').slice(0, 64)}`
-  };
-}
+const BACKEND_URL = 'http://127.0.0.1:8000/api/analyze';
 
 /**
- * Determine threat level based on file extension and characteristics
+ * Determine threat level based on file extension
  */
 function determineThreatLevel(filename: string): AnalysisData['threatLevel'] {
   const ext = filename.toLowerCase().split('.').pop() || '';
-  
+
   const highRiskExtensions = ['exe', 'dll', 'scr', 'bat', 'cmd', 'vbs', 'js', 'jar'];
   const mediumRiskExtensions = ['docm', 'xlsm', 'pptm', 'dotm', 'xltm'];
   const lowRiskExtensions = ['pdf', 'txt', 'jpg', 'png'];
-  
+
   if (highRiskExtensions.includes(ext)) return 'high';
   if (mediumRiskExtensions.includes(ext)) return 'medium';
   if (lowRiskExtensions.includes(ext)) return 'low';
-  
+
   return 'medium';
 }
 
 /**
- * Get file type description based on extension
+ * File type label
  */
 function getFileTypeDescription(filename: string): string {
   const ext = filename.toLowerCase().split('.').pop() || '';
-  
+
   const typeMap: Record<string, string> = {
-    'exe': 'PE32 executable (GUI) Intel 80386, for MS Windows',
-    'dll': 'PE32 dynamic link library (DLL) Intel 80386, for MS Windows',
-    'docm': 'Microsoft Word Document with Macros',
-    'xlsm': 'Microsoft Excel Spreadsheet with Macros',
-    'pdf': 'PDF document',
-    'zip': 'ZIP archive data',
-    'rar': 'RAR archive data',
+    exe: 'PE32 executable (Windows)',
+    dll: 'PE32 dynamic link library (DLL)',
+    docm: 'Microsoft Word Document with Macros',
+    xlsm: 'Microsoft Excel Spreadsheet with Macros',
+    pdf: 'PDF document',
+    zip: 'ZIP archive',
+    rar: 'RAR archive'
   };
-  
+
   return typeMap[ext] || `${ext.toUpperCase()} file`;
 }
 
 /**
- * Analyze attachment using FLARE tools
- * 
- * In production, this would:
- * 1. Get attachment content using Office.js getAttachmentContentAsync()
- * 2. Send to backend API endpoint (e.g., POST /api/analyze)
- * 3. Backend runs FLARE tools (FLOSS, CAPA, PE analysis)
- * 4. Return comprehensive analysis results
- * 
- * @param attachmentId - Office.js attachment ID
- * @param filename - Name of the attachment
- * @param mailboxItem - Office mailbox item for accessing attachment content
- * @returns Promise with analysis results
+ * Format bytes safely
+ */
+function formatBytes(bytes?: number | null): string {
+  if (!bytes || bytes <= 0) return 'Unknown';
+
+  const k = 1024;
+  const sizes = ['bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+}
+
+/**
+ * Convert Office.js attachment → File
+ */
+async function getFileFromOfficeJS(
+  attachmentId: string,
+  mailboxItem?: any
+): Promise<File | null> {
+  try {
+    if (!mailboxItem?.getAttachmentContentAsync) return null;
+
+    return new Promise((resolve) => {
+      mailboxItem.getAttachmentContentAsync(attachmentId, (result: any) => {
+        try {
+          if (result.status !== 'succeeded') return resolve(null);
+
+          const content = result.value;
+
+          const base64 = content.content || '';
+          const byteString = atob(base64);
+
+          const bytes = new Uint8Array(byteString.length);
+          for (let i = 0; i < byteString.length; i++) {
+            bytes[i] = byteString.charCodeAt(i);
+          }
+
+          const blob = new Blob([bytes], {
+            type: content.contentType || 'application/octet-stream'
+          });
+
+          const file = new File([blob], content.name || 'file.bin');
+
+          resolve(file);
+        } catch {
+          resolve(null);
+        }
+      });
+    });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * BACKEND CALL (FIXED)
+ */
+async function fetchAnalysisFromBackend(file: File) {
+  console.log("FILE SENT:", file.name);
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch('http://127.0.0.1:8000/api/analyze', {
+    method: 'POST',
+    body: formData
+  });
+
+  console.log("STATUS:", res.status);
+
+  const data = await res.json();
+  console.log("RESPONSE:", data);
+
+  return data;
+}
+
+/**
+ * MAIN ANALYSIS FUNCTION
  */
 export async function analyzeAttachment(
   attachmentId: string,
   filename: string,
   mailboxItem?: any
 ): Promise<AnalysisData> {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
- 
-  
-  // Mock data for demonstration
+
+  // 1. Extract file from Outlook
+  const file = await getFileFromOfficeJS(attachmentId, mailboxItem);
+
+  // 2. Try backend analysis
+  if (file) {
+    const backendResult = await fetchAnalysisFromBackend(file);
+
+    if (backendResult) {
+      return {
+        filename,
+        hash: backendResult.hash ?? {
+          md5: 'Not available',
+          sha1: 'Not available',
+          sha256: 'Not available'
+        },
+        fileType: backendResult.fileType ?? getFileTypeDescription(filename),
+        size: backendResult.size ?? formatBytes(file.size),
+        entropy: backendResult.entropy ?? 'N/A',
+        compiledTime: backendResult.compiledTime ?? 'N/A',
+        sections: backendResult.sections ?? 0,
+        imports: backendResult.imports ?? 0,
+        exports: backendResult.exports ?? 0,
+        threatLevel: backendResult.threatLevel ?? determineThreatLevel(filename),
+        suspicious: backendResult.suspicious ?? false
+      };
+    }
+  }
+
+  // 3. Fallback (safe mode)
   const threatLevel = determineThreatLevel(filename);
-  const suspicious = threatLevel === 'high' || threatLevel === 'critical';
-  
+
   return {
     filename,
-    hash: generateMockHash(filename),
+
+    hash: {
+      md5: 'Not available',
+      sha1: 'Not available',
+      sha256: 'Not available'
+    },
+
     fileType: getFileTypeDescription(filename),
-    size: '2,359,296 bytes',
-    entropy: suspicious ? '7.2' : '4.5',
-    compiledTime: new Date().toISOString().split('T')[0] + ' 14:23:11 UTC',
-    sections: 5,
-    imports: suspicious ? 23 : 8,
+
+    size: 'Unknown',
+
+    entropy: 'Not available',
+    compiledTime: 'Not available',
+    sections: 0,
+    imports: 0,
     exports: 0,
+
     threatLevel,
-    suspicious
+    suspicious: threatLevel === 'high'
   };
 }
 
 /**
- * Export analysis results to various formats
- * This could be extended to support JSON, PDF, etc.
+ * Export report
  */
 export function generateAnalysisReport(
   analysisData: AnalysisData,
@@ -108,27 +192,21 @@ export function generateAnalysisReport(
   if (format === 'json') {
     return JSON.stringify(analysisData, null, 2);
   }
-  
-  // CSV format handled by ExportButton component
   return '';
 }
 
 /**
- * Check if file is safe to analyze
- * Validates file size and type before analysis
+ * Validate attachment safely
  */
-export function validateAttachment(
-  filename: string,
-  size: number
-): { valid: boolean; error?: string } {
-  const maxSize = 50 * 1024 * 1024; // 50MB limit
-  
+export function validateAttachment(filename: string, size: number) {
+  const maxSize = 50 * 1024 * 1024;
+
   if (size > maxSize) {
     return {
       valid: false,
-      error: `File size exceeds maximum limit of ${maxSize / 1024 / 1024}MB`
+      error: 'File too large (max 50MB)'
     };
   }
-  
+
   return { valid: true };
 }

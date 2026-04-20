@@ -2,73 +2,70 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
 import { AlertTriangle } from 'lucide-react';
-import { MOCK_CAPABILITIES } from '../constants/mockData';
 import type { CapabilitySeverity } from '../types/analysis';
 
-export function CapabilitiesAnalysis() {
-  const getSeverityColor = (severity: CapabilitySeverity): string => {
-    switch (severity) {
-      case 'critical': return 'border-red-500 bg-red-50';
-      case 'high': return 'border-orange-500 bg-orange-50';
-      case 'medium': return 'border-yellow-500 bg-yellow-50';
-      default: return 'border-blue-500 bg-blue-50';
-    }
-  };
+interface Capability {
+  category: string;
+  severity: CapabilitySeverity;
+  items: string[];
+}
 
-  const getSeverityBadge = (severity: CapabilitySeverity) => {
-    switch (severity) {
-      case 'critical': return <Badge variant="destructive">CRITICAL</Badge>;
-      case 'high': return <Badge variant="destructive" className="bg-orange-600">HIGH</Badge>;
-      case 'medium': return <Badge variant="default">MEDIUM</Badge>;
-      default: return <Badge variant="secondary">LOW</Badge>;
-    }
+interface Props {
+  capabilities?: Capability[];
+}
+
+export function CapabilitiesAnalysis({ capabilities = [] }: Props) {
+
+  const getBadge = (severity: CapabilitySeverity) => {
+    if (severity === 'critical') return <Badge variant="destructive">CRITICAL</Badge>;
+    if (severity === 'high') return <Badge variant="destructive">HIGH</Badge>;
+    if (severity === 'medium') return <Badge>MEDIUM</Badge>;
+    return <Badge variant="secondary">LOW</Badge>;
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm">CAPA - Capability Analysis</CardTitle>
-        <CardDescription>
-          Detected capabilities based on MITRE ATT&CK framework
-        </CardDescription>
+        <CardTitle className="text-sm">CAPA Analysis</CardTitle>
+        <CardDescription>Detected capabilities</CardDescription>
       </CardHeader>
+
       <CardContent>
-        <ScrollArea className="h-[450px] pr-4">
-          <div className="space-y-3">
-            {MOCK_CAPABILITIES.map((capability, index) => {
-              const Icon = capability.icon;
-              return (
-                <div 
-                  key={index}
-                  className={`border-l-4 rounded p-3 ${getSeverityColor(capability.severity)}`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-4 h-4" />
-                      <h3 className="text-sm">{capability.category}</h3>
-                    </div>
-                    {getSeverityBadge(capability.severity)}
-                  </div>
-                  <ul className="space-y-1 ml-6">
-                    {capability.items.map((item, itemIndex) => (
-                      <li key={itemIndex} className="text-xs text-muted-foreground list-disc">
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
+
+        <ScrollArea className="h-[450px]">
+
+          {capabilities.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              No capabilities detected
+            </p>
+          ) : (
+            capabilities.map((c, i) => (
+              <div key={i} className="mb-3 border rounded p-3">
+
+                <div className="flex justify-between mb-2">
+                  <span>{c.category}</span>
+                  {getBadge(c.severity)}
                 </div>
-              );
-            })}
-          </div>
+
+                <ul className="text-xs list-disc ml-4">
+                  {c.items.map((item, j) => (
+                    <li key={j}>{item}</li>
+                  ))}
+                </ul>
+
+              </div>
+            ))
+          )}
+
         </ScrollArea>
 
-        <div className="mt-4 p-3 bg-muted rounded flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+        <div className="mt-4 p-3 bg-muted rounded flex gap-2">
+          <AlertTriangle className="w-4 h-4 text-yellow-600" />
           <p className="text-xs text-muted-foreground">
-            This file exhibits capabilities commonly associated with malware. 
-            Further dynamic analysis recommended.
+            Capability detection is heuristic-based.
           </p>
         </div>
+
       </CardContent>
     </Card>
   );

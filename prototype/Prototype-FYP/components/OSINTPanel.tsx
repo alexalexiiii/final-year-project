@@ -1,535 +1,258 @@
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
-import { Badge } from "./ui/badge"
-import { Button } from "./ui/button"
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
-import { ScrollArea } from "./ui/scroll-area"
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { Button } from './ui/button';
 
 import {
-  Shield,
-  AlertTriangle,
-  CheckCircle2,
   Globe,
+  Shield,
   Server,
   Link,
   Hash,
-  RefreshCw,
-  AlertCircle
-} from "lucide-react"
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  RefreshCw
+} from 'lucide-react';
 
-import type { OSINTData, FileHash } from "../types/analysis"
-import { performOSINTAnalysis } from "../services/osintService"
+import type { OSINTData, FileHash } from '../types/analysis';
+import { performOSINTAnalysis } from '../services/osintService';
 
 interface OSINTPanelProps {
-  fileHash: FileHash
-  extractedStrings: string[]
+  fileHash: FileHash;
+  extractedStrings: string[];
 }
 
 export function OSINTPanel({ fileHash, extractedStrings }: OSINTPanelProps) {
+  const [data, setData] = useState<OSINTData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [osintData, setOsintData] = useState<OSINTData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const loadOSINTData = async () => {
-
-    setLoading(true)
-    setError(null)
+  const load = async () => {
+    setLoading(true);
+    setError(null);
 
     try {
-
-      const data = await performOSINTAnalysis(
-        fileHash,
-        extractedStrings
-      )
-
-      setOsintData(data)
-
-    } catch (err) {
-
-      console.error("OSINT error:", err)
-      setError("Failed to retrieve threat intelligence data.")
-
+      const result = await performOSINTAnalysis(fileHash, extractedStrings);
+      setData(result);
+    } catch (e) {
+      console.error(e);
+      setError('Failed to retrieve OSINT data.');
     } finally {
-
-      setLoading(false)
-
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadOSINTData()
-  }, [fileHash, extractedStrings])
-
-
-  if (loading) {
-
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-center py-8">
-            <RefreshCw className="w-8 h-8 animate-spin text-primary mb-3"/>
-            <p className="text-sm text-muted-foreground">
-              Querying threat intelligence feeds...
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-
-  if (error) {
-
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4"/>
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-2"
-          onClick={loadOSINTData}
-        >
-          <RefreshCw className="w-3 h-3 mr-1"/>
-          Retry
-        </Button>
-
-      </Alert>
-    )
-  }
-
-
-  if (!osintData) return null
-
-
-  const getThreatScore = () => {
-
-    let score = 0
-
-    if (osintData.virustotal) {
-
-      const rate =
-        osintData.virustotal.positives /
-        osintData.virustotal.total
-
-      score += rate * 40
-    }
-
-    const highRiskIPs =
-      osintData.abuseipdb.filter(
-        ip => ip.abuseConfidenceScore > 50
-      )
-
-    score += highRiskIPs.length * 15
-
-    const maliciousURLs =
-      osintData.urlscan.filter(
-        url => url.verdict.malicious
-      )
-
-    score += maliciousURLs.length * 20
-
-    return Math.min(100, Math.round(score))
-  }
-
-
-  const threatScore = getThreatScore()
-
+    load();
+  }, [fileHash, extractedStrings]);
 
   const getThreatLevel = (score: number) => {
-
     if (score >= 75)
-      return { label: "Critical", variant: "destructive", icon: AlertTriangle }
-
+      return { label: 'CRITICAL', icon: XCircle, variant: 'destructive' as const };
     if (score >= 50)
-      return { label: "High", variant: "destructive", icon: AlertTriangle }
-
+      return { label: 'HIGH', icon: AlertTriangle, variant: 'destructive' as const };
     if (score >= 25)
-      return { label: "Medium", variant: "secondary", icon: AlertCircle }
+      return { label: 'MEDIUM', icon: AlertTriangle, variant: 'default' as const };
 
-    return { label: "Low", variant: "default", icon: CheckCircle2 }
+    return { label: 'LOW', icon: CheckCircle2, variant: 'secondary' as const };
+  };
+
+  const calculateScore = () => {
+    if (!data) return 0;
+
+    let score = 0;
+
+    const vt = data.virustotal;
+
+    if (vt?.total && vt.total > 0) {
+      score += (vt.positives / vt.total) * 40;
+    }
+
+    const abuseHits =
+      data.abuseipdb?.filter(i => i.abuseConfidenceScore > 50)?.length || 0;
+
+    score += abuseHits * 15;
+
+    const maliciousUrls =
+      data.urlscan?.filter(u => u?.verdict?.malicious)?.length || 0;
+
+    score += maliciousUrls * 20;
+
+    return Math.min(100, Math.round(score));
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-sm text-muted-foreground">
+          <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />
+          Querying OSINT feeds...
+        </CardContent>
+      </Card>
+    );
   }
 
-  const threat = getThreatLevel(threatScore)
-  const ThreatIcon = threat.icon
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>OSINT Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+        <Button onClick={load} variant="outline" size="sm" className="mt-3">
+          Retry
+        </Button>
+      </Alert>
+    );
+  }
 
+  if (!data) return null;
+
+  const score = calculateScore();
+  const threat = getThreatLevel(score);
+  const ThreatIcon = threat.icon;
+
+  const vt = data.virustotal;
+  const abuse = data.abuseipdb ?? [];
+  const urls = data.urlscan ?? [];
+  const iocs = data.extractedIOCs ?? {
+    ips: [],
+    urls: [],
+    domains: [],
+    emails: []
+  };
 
   return (
     <div className="space-y-4">
 
-
-      {/* Threat Score */}
-
+      {/* Threat Overview */}
       <Card>
-
         <CardHeader>
-
-          <div className="flex items-center justify-between">
-
+          <div className="flex items-start justify-between">
             <div>
-
               <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5"/>
-                Threat Intelligence
+                <Globe className="w-4 h-4" />
+                OSINT Intelligence
               </CardTitle>
-
               <CardDescription>
-                External OSINT threat feeds
+                External threat intelligence correlation
               </CardDescription>
-
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadOSINTData}
-            >
-              <RefreshCw className="w-3 h-3 mr-1"/>
-              Refresh
-            </Button>
-
+            <Badge variant={threat.variant} className="gap-1">
+              <ThreatIcon className="w-3 h-3" />
+              {threat.label}
+            </Badge>
           </div>
-
         </CardHeader>
 
-
         <CardContent>
-
           <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-
-            <div className="flex items-center gap-3">
-
-              <ThreatIcon className="w-6 h-6 text-destructive"/>
-
-              <div>
-
-                <p className="font-medium">
-                  Threat Score
-                </p>
-
-                <p className="text-xs text-muted-foreground">
-                  Last updated:
-                  {" "}
-                  {new Date(osintData.lastUpdated).toLocaleString()}
-                </p>
-
-              </div>
-
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-muted-foreground" />
+              <p className="text-sm font-medium">Threat Score</p>
             </div>
 
-            <div className="text-right">
-
-              <div className="text-2xl font-bold">
-                {threatScore}/100
-              </div>
-
-              <Badge variant={threat.variant as any}>
-                {threat.label} Risk
-              </Badge>
-
-            </div>
-
+            <p className="text-xl font-bold">{score}/100</p>
           </div>
-
         </CardContent>
-
       </Card>
 
-
-
-      {/* Tabs */}
-
-      <Tabs defaultValue="virustotal">
-
-        <TabsList className="grid grid-cols-4 w-full">
-
-          <TabsTrigger value="virustotal">
-            <Shield className="w-3 h-3 mr-1"/>
+      {/* VirusTotal */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="w-4 h-4" />
             VirusTotal
-          </TabsTrigger>
-
-          <TabsTrigger value="ips">
-            <Server className="w-3 h-3 mr-1"/>
-            IPs
-          </TabsTrigger>
-
-          <TabsTrigger value="urls">
-            <Link className="w-3 h-3 mr-1"/>
-            URLs
-          </TabsTrigger>
-
-          <TabsTrigger value="iocs">
-            <Hash className="w-3 h-3 mr-1"/>
-            IOCs
-          </TabsTrigger>
-
-        </TabsList>
-
-
-        {/* VirusTotal */}
-
-        <TabsContent value="virustotal">
-
-          <Card>
-
-            <CardHeader>
-
-              <CardTitle>
-                VirusTotal Results
-              </CardTitle>
-
-              <CardDescription>
-                Antivirus detections
-              </CardDescription>
-
-            </CardHeader>
-
-
-            <CardContent>
-
-              {osintData.virustotal ? (
-
-                <ScrollArea className="h-[300px] border rounded-lg p-3">
-
-                  {osintData.virustotal.detections.map((d, i) => (
-
-                    <div
-                      key={i}
-                      className="flex justify-between border-b py-2"
-                    >
-
-                      <div className="flex items-center gap-2">
-
-                        {d.detected ? (
-                          <AlertTriangle className="w-4 h-4 text-destructive"/>
-                        ) : (
-                          <CheckCircle2 className="w-4 h-4 text-green-500"/>
-                        )}
-
-                        <span className="text-sm">
-                          {d.vendor}
-                        </span>
-
-                      </div>
-
-                      <span className="text-xs text-muted-foreground">
-                        {d.result || "Clean"}
-                      </span>
-
-                    </div>
-
-                  ))}
-
-                </ScrollArea>
-
-              ) : (
-
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No VirusTotal data
-                </p>
-
-              )}
-
-            </CardContent>
-
-          </Card>
-
-        </TabsContent>
-
-
-        {/* IPs */}
-
-        <TabsContent value="ips">
-
-          <Card>
-
-            <CardHeader>
-              <CardTitle>IP Intelligence</CardTitle>
-            </CardHeader>
-
-            <CardContent>
-
-              {osintData.abuseipdb.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No IPs detected
-                </p>
-              ) : (
-
-                osintData.abuseipdb.map((ip, i) => (
-
-                  <div
-                    key={i}
-                    className="border rounded-lg p-3 mb-2"
-                  >
-
-                    <div className="flex justify-between">
-
-                      <span className="font-mono">
-                        {ip.ipAddress}
-                      </span>
-
-                      <Badge
-                        variant={
-                          ip.abuseConfidenceScore > 50
-                            ? "destructive"
-                            : "secondary"
-                        }
-                      >
-                        {ip.abuseConfidenceScore}%
-                      </Badge>
-
-                    </div>
-
-                    <p className="text-xs text-muted-foreground">
-                      {ip.isp} • {ip.countryCode}
-                    </p>
-
-                  </div>
-
-                ))
-
-              )}
-
-            </CardContent>
-
-          </Card>
-
-        </TabsContent>
-
-
-        {/* URLs */}
-
-        <TabsContent value="urls">
-
-          <Card>
-
-            <CardHeader>
-              <CardTitle>URL Intelligence</CardTitle>
-            </CardHeader>
-
-            <CardContent>
-
-              {osintData.urlscan.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No URLs detected
-                </p>
-              ) : (
-
-                osintData.urlscan.map((u, i) => (
-
-                  <div
-                    key={i}
-                    className="border rounded-lg p-3 mb-2"
-                  >
-
-                    <div className="flex justify-between">
-
-                      <span className="text-sm break-all">
-                        {u.url}
-                      </span>
-
-                      {u.verdict.malicious && (
-                        <Badge variant="destructive">
-                          Malicious
-                        </Badge>
-                      )}
-
-                    </div>
-
-                  </div>
-
-                ))
-
-              )}
-
-            </CardContent>
-
-          </Card>
-
-        </TabsContent>
-
-
-        {/* IOCs */}
-
-        <TabsContent value="iocs">
-
-          <Card>
-
-            <CardHeader>
-              <CardTitle>
-                Indicators of Compromise
-              </CardTitle>
-              <CardDescription>
-                Extracted from file strings
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-3">
-
-              <div>
-
-                <p className="font-medium">
-                  IP Addresses ({osintData.extractedIOCs.ips.length})
-                </p>
-
-                {osintData.extractedIOCs.ips.length === 0
-                  ? "None found"
-                  : osintData.extractedIOCs.ips.join(", ")}
-
+          </CardTitle>
+          <CardDescription>File reputation analysis</CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          {vt?.total ? (
+            <div className="text-sm flex justify-between">
+              <span>Detections</span>
+              <span className="font-mono">
+                {vt.positives ?? 0}/{vt.total ?? 0}
+              </span>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No data available</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* IP Intelligence */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Server className="w-4 h-4" />
+            IP Intelligence
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-2">
+          {abuse.length ? (
+            abuse.map((ip, i) => (
+              <div key={i} className="flex justify-between text-sm border-b py-2">
+                <span className="font-mono">{ip.ipAddress}</span>
+
+                <Badge variant={ip.abuseConfidenceScore > 50 ? 'destructive' : 'secondary'}>
+                  {ip.abuseConfidenceScore}%
+                </Badge>
               </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">No IP data</p>
+          )}
+        </CardContent>
+      </Card>
 
+      {/* URL Intelligence */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Link className="w-4 h-4" />
+            URL Intelligence
+          </CardTitle>
+        </CardHeader>
 
-              <div>
+        <CardContent>
+          {urls.length ? (
+            urls.map((u, i) => (
+              <div key={i} className="flex justify-between text-sm border-b py-2">
+                <span className="break-all">{u.url}</span>
 
-                <p className="font-medium">
-                  URLs ({osintData.extractedIOCs.urls.length})
-                </p>
-
-                {osintData.extractedIOCs.urls.length === 0
-                  ? "None found"
-                  : osintData.extractedIOCs.urls.join(", ")}
-
+                {u?.verdict?.malicious && (
+                  <Badge variant="destructive">Malicious</Badge>
+                )}
               </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">No URL data</p>
+          )}
+        </CardContent>
+      </Card>
 
+      {/* IOCs */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Hash className="w-4 h-4" />
+            Indicators of Compromise
+          </CardTitle>
+          <CardDescription>Extracted artifacts</CardDescription>
+        </CardHeader>
 
-              <div>
-
-                <p className="font-medium">
-                  Domains ({osintData.extractedIOCs.domains.length})
-                </p>
-
-                {osintData.extractedIOCs.domains.length === 0
-                  ? "None found"
-                  : osintData.extractedIOCs.domains.join(", ")}
-
-              </div>
-
-
-              <div>
-
-                <p className="font-medium">
-                  Emails ({osintData.extractedIOCs.emails.length})
-                </p>
-
-                {osintData.extractedIOCs.emails.length === 0
-                  ? "None found"
-                  : osintData.extractedIOCs.emails.join(", ")}
-
-              </div>
-
-            </CardContent>
-
-          </Card>
-
-        </TabsContent>
-
-
-      </Tabs>
+        <CardContent className="space-y-2 text-sm">
+          <p><strong>IPs:</strong> {iocs.ips.length ? iocs.ips.join(', ') : 'None'}</p>
+          <p><strong>URLs:</strong> {iocs.urls.length ? iocs.urls.join(', ') : 'None'}</p>
+          <p><strong>Domains:</strong> {iocs.domains.length ? iocs.domains.join(', ') : 'None'}</p>
+          <p><strong>Emails:</strong> {iocs.emails.length ? iocs.emails.join(', ') : 'None'}</p>
+        </CardContent>
+      </Card>
 
     </div>
-  )
+  );
 }
