@@ -1,185 +1,150 @@
+/// <reference types="office-js" />
 import type { AnalysisData } from '../types/analysis';
 
-/**
- * BACKEND URL (IMPORTANT: change for production)
- */
 const BACKEND_URL = 'http://127.0.0.1:8000/api/analyze';
-
-/**
- * Determine threat level based on file extension
- */
-function determineThreatLevel(filename: string): AnalysisData['threatLevel'] {
-  const ext = filename.toLowerCase().split('.').pop() || '';
-
-  const highRiskExtensions = ['exe', 'dll', 'scr', 'bat', 'cmd', 'vbs', 'js', 'jar'];
-  const mediumRiskExtensions = ['docm', 'xlsm', 'pptm', 'dotm', 'xltm'];
-  const lowRiskExtensions = ['pdf', 'txt', 'jpg', 'png'];
-
-  if (highRiskExtensions.includes(ext)) return 'high';
-  if (mediumRiskExtensions.includes(ext)) return 'medium';
-  if (lowRiskExtensions.includes(ext)) return 'low';
-
-  return 'medium';
-}
-
-/**
- * File type label
- */
-function getFileTypeDescription(filename: string): string {
-  const ext = filename.toLowerCase().split('.').pop() || '';
-
-  const typeMap: Record<string, string> = {
-    exe: 'PE32 executable (Windows)',
-    dll: 'PE32 dynamic link library (DLL)',
-    docm: 'Microsoft Word Document with Macros',
-    xlsm: 'Microsoft Excel Spreadsheet with Macros',
-    pdf: 'PDF document',
-    zip: 'ZIP archive',
-    rar: 'RAR archive'
-  };
-
-  return typeMap[ext] || `${ext.toUpperCase()} file`;
-}
-
-/**
- * Format bytes safely
- */
-function formatBytes(bytes?: number | null): string {
-  if (!bytes || bytes <= 0) return 'Unknown';
-
-  const k = 1024;
-  const sizes = ['bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
-}
 
 /**
  * Convert Office.js attachment → File
  */
 async function getFileFromOfficeJS(
-  attachmentId: string,
-  mailboxItem?: any
-): Promise<File | null> {
-  try {
-    if (!mailboxItem?.getAttachmentContentAsync) return null;
+  attachmentId: string
+): Promise<File> {
 
-    return new Promise((resolve) => {
-      mailboxItem.getAttachmentContentAsync(attachmentId, (result: any) => {
+  const item = Office?.context?.mailbox?.item;
+
+  if (!item?.getAttachmentContentAsync) {
+    console.error("OFFICE CONTEXT:", {
+      office: !!Office,
+      mailbox: !!Office?.context?.mailbox,
+      item: !!Office?.context?.mailbox?.item
+    });
+
+    throw new Error(
+      "Not running inside a valid Outlook add-in context (Office.context.mailbox.item is missing)"
+    );
+  }
+
+  return new Promise((resolve, reject) => {
+    item.getAttachmentContentAsync(
+      attachmentId,
+      { asyncContext: null },
+      (result: any) => {
+
+        if (result.status !== Office.AsyncResultStatus.Succeeded) {
+          console.error("❌ Attachment fetch failed:", result.error);
+          return reject(new Error("Attachment extraction failed"));
+        }
+
+        const content = result.value;
+
+        console.log("📦 ATTACHMENT RAW:", content);
+
         try {
-          if (result.status !== 'succeeded') return resolve(null);
+          if (
+            content.format ===
+            Office.MailboxEnums.AttachmentContentFormat.Base64
+          ) {
+            const base64 = content.content;
 
-          const content = result.value;
+            const byteString = atob(base64);
+            const bytes = new Uint8Array(byteString.length);
 
-          const base64 = content.content || '';
-          const byteString = atob(base64);
+            for (let i = 0; i < byteString.length; i++) {
+              bytes[i] = byteString.charCodeAt(i);
+            }
 
-          const bytes = new Uint8Array(byteString.length);
-          for (let i = 0; i < byteString.length; i++) {
-            bytes[i] = byteString.charCodeAt(i);
+            const blob = new Blob([bytes], {
+              type: content.contentType || "application/octet-stream"
+            });
+
+            const file = new File([blob], content.name || "attachment.bin");
+
+            return resolve(file);
           }
 
-          const blob = new Blob([bytes], {
-            type: content.contentType || 'application/octet-stream'
-          });
+          reject(
+            new Error(`Unsupported attachment format: ${content.format}`)
+          );
 
-          const file = new File([blob], content.name || 'file.bin');
-
-          resolve(file);
-        } catch {
-          resolve(null);
+        } catch (err) {
+          reject(new Error("Failed to decode attachment content"));
         }
-      });
-    });
-  } catch {
-    return null;
-  }
+      }
+    );
+  });
 }
 
 /**
- * BACKEND CALL (FIXED)
+ * Send file to backend
  */
 async function fetchAnalysisFromBackend(file: File) {
-  console.log("FILE SENT:", file.name);
+  console.log("📤 Sending file:", file.name);
 
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch('http://127.0.0.1:8000/api/analyze', {
-    method: 'POST',
+  const res = await fetch(BACKEND_URL, {
+    method: "POST",
     body: formData
   });
 
-  console.log("STATUS:", res.status);
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("❌ Backend error:", text);
+    throw new Error(`Backend failed: ${res.status}`);
+  }
 
   const data = await res.json();
-  console.log("RESPONSE:", data);
+
+  console.log("✅ Backend response:", data);
 
   return data;
 }
 
 /**
- * MAIN ANALYSIS FUNCTION
+ * MAIN ANALYSIS FUNCTION (STRICT)
  */
 export async function analyzeAttachment(
   attachmentId: string,
-  filename: string,
-  mailboxItem?: any
+  filename: string
 ): Promise<AnalysisData> {
 
-  // 1. Extract file from Outlook
-  const file = await getFileFromOfficeJS(attachmentId, mailboxItem);
+  try {
+    // 1. Extract file
+    const file = await getFileFromOfficeJS(attachmentId);
 
-  // 2. Try backend analysis
-  if (file) {
+    console.log("✅ File extracted:", file);
+
+    if (!file) {
+      throw new Error("File extraction returned null");
+    }
+
+    // 2. Send to backend
     const backendResult = await fetchAnalysisFromBackend(file);
 
-    if (backendResult) {
-      return {
-        filename,
-        hash: backendResult.hash ?? {
-          md5: 'Not available',
-          sha1: 'Not available',
-          sha256: 'Not available'
-        },
-        fileType: backendResult.fileType ?? getFileTypeDescription(filename),
-        size: backendResult.size ?? formatBytes(file.size),
-        entropy: backendResult.entropy ?? 'N/A',
-        compiledTime: backendResult.compiledTime ?? 'N/A',
-        sections: backendResult.sections ?? 0,
-        imports: backendResult.imports ?? 0,
-        exports: backendResult.exports ?? 0,
-        threatLevel: backendResult.threatLevel ?? determineThreatLevel(filename),
-        suspicious: backendResult.suspicious ?? false
-      };
+    if (!backendResult) {
+      throw new Error("Invalid backend response");
     }
+
+    // 3. Map result
+    return {
+      filename: backendResult.filename || file.name,
+      hash: backendResult.hash,
+      fileType: backendResult.fileType,
+      size: backendResult.size,
+      entropy: backendResult.entropy,
+      compiledTime: backendResult.compiledTime,
+      sections: backendResult.sections,
+      imports: backendResult.imports,
+      exports: backendResult.exports,
+      threatLevel: backendResult.threatLevel,
+      suspicious: backendResult.suspicious
+    };
+
+  } catch (err) {
+    console.error("🔥 ANALYSIS FAILED:", err);
+    throw err;
   }
-
-  // 3. Fallback (safe mode)
-  const threatLevel = determineThreatLevel(filename);
-
-  return {
-    filename,
-
-    hash: {
-      md5: 'Not available',
-      sha1: 'Not available',
-      sha256: 'Not available'
-    },
-
-    fileType: getFileTypeDescription(filename),
-
-    size: 'Unknown',
-
-    entropy: 'Not available',
-    compiledTime: 'Not available',
-    sections: 0,
-    imports: 0,
-    exports: 0,
-
-    threatLevel,
-    suspicious: threatLevel === 'high'
-  };
 }
 
 /**
@@ -196,7 +161,7 @@ export function generateAnalysisReport(
 }
 
 /**
- * Validate attachment safely
+ * Validate attachment
  */
 export function validateAttachment(filename: string, size: number) {
   const maxSize = 50 * 1024 * 1024;
