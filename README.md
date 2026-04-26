@@ -11,7 +11,7 @@ This is an Outlook add-in built with React + TypeScript that integrates FLARE to
 - **Frontend**: React + TypeScript (TSX)
 - **Office Integration**: Office.js API
 - **UI**: Tailwind CSS + shadcn/ui components
-- **Backend** (to be implemented): Node.js/Python API running FLARE tools
+- **Backend** (to be implemented): Uvicorn/FastAPI running FLARE tools
 
 ## How It Works
 
