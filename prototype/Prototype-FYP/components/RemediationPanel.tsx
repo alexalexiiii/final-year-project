@@ -13,11 +13,11 @@ import {
   Server,
   CheckCircle2
 } from 'lucide-react';
-import type { ThreatLevel, RemediationRecommendation } from '../types/analysis';
+import type { ThreatLevel, RemediationRecommendation, SuspiciousData } from '../types/analysis';
 
 interface RemediationPanelProps {
   threatLevel: ThreatLevel;
-  suspicious: boolean;
+  suspicious: SuspiciousData;
 }
 
 export function RemediationPanel({ threatLevel, suspicious }: RemediationPanelProps) {

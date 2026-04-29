@@ -72,25 +72,76 @@ export async function analyzeAttachment(
     const file = await getFileFromOfficeJS(attachmentId);
     const backendResult = await fetchAnalysisFromBackend(file);
 
-    const pdfFeatures = backendResult?.pdf_features ?? {};
-    const pdfFlags = backendResult?.pdfid?.flags ?? {};
-    const iocs = backendResult?.iocs ?? backendResult?.extractedIOCs ?? {};
-    const suspicious =
-      backendResult?.suspicious ??
-      (Object.keys(pdfFeatures).length > 0 || Object.keys(pdfFlags).length > 0);
+    // 🔥 DEBUG — YOU NEED THIS RIGHT NOW
+    console.log("BACKEND RESULT:", backendResult);
+
+    // -----------------------------
+    // PDF DATA (robust mapping)
+    // -----------------------------
+    const pdfFeatures =
+      backendResult?.pdf_features ??
+      backendResult?.pdfFeatures ??
+      {};
+
+    const pdfFlags =
+      backendResult?.pdfid_flags ??
+      backendResult?.pdfid?.flags ??
+      backendResult?.pdfid?.data ??
+      {};
+
+    // -----------------------------
+    // IOC DATA (robust mapping)
+    // -----------------------------
+    const iocsRaw =
+  backendResult?.iocs ??
+  backendResult?.extractedIOCs ??
+  {};
+
+const iocs = {
+  ips: iocsRaw.ips ?? [],
+  urls: iocsRaw.urls ?? [],
+  domains: iocsRaw.domains ?? [],
+  emails: iocsRaw.emails ?? []
+};
+
+    // -----------------------------
+    // SUSPICIOUS DATA (FIXED TYPE)
+    // -----------------------------
+    const suspicious = {
+      pdf_features: pdfFeatures ?? {},
+      pdfid_flags: pdfFlags ?? {}
+    };
 
     return {
       filename: backendResult?.filename ?? file.name,
-      hash: backendResult?.hash ?? null,
+
+      hash: backendResult?.hash ?? {
+        md5: "",
+        sha1: "",
+        sha256: ""
+      },
+
       fileType: backendResult?.fileType ?? file.type,
       size: backendResult?.size ?? file.size,
-      entropy: backendResult?.entropy ?? null,
-      compiledTime: backendResult?.compiledTime ?? null,
-      sections: backendResult?.sections ?? null,
-      imports: backendResult?.imports ?? null,
-      exports: backendResult?.exports ?? null,
-      threatLevel: backendResult?.threatLevel ?? "unknown",
+
+      entropy: backendResult?.entropy ?? 0,
+      compiledTime: backendResult?.compiledTime ?? undefined,
+
+      sections: backendResult?.sections ?? 0,
+      imports: backendResult?.imports ?? 0,
+      exports: backendResult?.exports ?? 0,
+
+      threatLevel: backendResult?.threatLevel ?? "low",
+
+      // ✅ FIXED (no longer boolean)
       suspicious,
+
+      // ✅ PASS RAW PDFID FOR UI IF NEEDED
+      pdfid: {
+        headers: undefined,
+        sections: undefined
+      },
+
       iocs: {
         ips: iocs.ips ?? [],
         urls: iocs.urls ?? [],
@@ -100,6 +151,7 @@ export async function analyzeAttachment(
     };
 
   } catch (err) {
+    console.error("Analysis failed:", err);
     throw err;
   }
 }

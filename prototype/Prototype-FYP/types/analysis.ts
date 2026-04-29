@@ -221,3 +221,23 @@ export interface OSINTData {
 
   lastUpdated: string;
 }
+
+/* =========================
+  Mailbox Item (OfficeJS)
+========================= */
+export interface OfficeMailboxItem {
+  attachments: any[];
+  subject?: string;
+  from?: {
+    displayName: string;
+    emailAddress: string;
+  };
+  internetMessageId?: string;
+}
+
+export interface RemediationRecommendation {
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  category: string;
+  actions: string[];
+  icon: LucideIcon;
+}

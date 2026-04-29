@@ -24,14 +24,15 @@ import type {
   PESection,
   Capability,
   ExtractedString,
-  OfficeMailboxItem
+  OfficeMailboxItem,
+  SuspiciousData
 } from '../types/analysis';
 
 interface FlareToolsPanelProps {
   attachmentName: string;
   fileHash: FileHash;
   threatLevel: ThreatLevel;
-  suspicious: boolean;
+  suspicious: SuspiciousData;
 
   extractedStrings: ExtractedString[];
   capabilities?: Capability[];

@@ -33,12 +33,11 @@ export function ExportButton({ analysisData, attachmentName }: ExportButtonProps
 
       let csvContent = '';
 
-      // Header
-      csvContent += 'FLARE Malware Analysis Report\n';
+      csvContent += 'Static Analysis Report\n';
       csvContent += `Generated,${timestamp}\n`;
       csvContent += `Attachment,${attachmentName}\n\n`;
 
-      // Overview (REAL DATA ONLY)
+
       csvContent += 'ANALYSIS OVERVIEW\n';
       csvContent += 'Category,Value\n';
       csvContent += `Filename,${analysisData.filename}\n`;

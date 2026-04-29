@@ -116,12 +116,15 @@ export function OSINTPanel({ fileHash, extractedStrings }: OSINTPanelProps) {
   const vt = data.virustotal;
   const abuse = data.abuseipdb ?? [];
   const urls = data.urlscan ?? [];
-  const iocs = data.extractedIOCs ?? {
-    ips: [],
-    urls: [],
-    domains: [],
-    emails: []
-  };
+
+ const iocs = data?.extractedIOCs ?? {
+  ips: [],
+  urls: [],
+  domains: [],
+  emails: []
+};
+
+  const stats = (data as any).iocStats;
 
   return (
     <div className="space-y-4">
@@ -197,7 +200,6 @@ export function OSINTPanel({ fileHash, extractedStrings }: OSINTPanelProps) {
             abuse.map((ip, i) => (
               <div key={i} className="flex justify-between text-sm border-b py-2">
                 <span className="font-mono">{ip.ipAddress}</span>
-
                 <Badge variant={ip.abuseConfidenceScore > 50 ? 'destructive' : 'secondary'}>
                   {ip.abuseConfidenceScore}%
                 </Badge>
@@ -223,7 +225,6 @@ export function OSINTPanel({ fileHash, extractedStrings }: OSINTPanelProps) {
             urls.map((u, i) => (
               <div key={i} className="flex justify-between text-sm border-b py-2">
                 <span className="break-all">{u.url}</span>
-
                 {u?.verdict?.malicious && (
                   <Badge variant="destructive">Malicious</Badge>
                 )}
@@ -246,6 +247,12 @@ export function OSINTPanel({ fileHash, extractedStrings }: OSINTPanelProps) {
         </CardHeader>
 
         <CardContent className="space-y-2 text-sm">
+          {stats && (
+            <p className="text-xs text-muted-foreground mb-2">
+              {stats.ips} IPs • {stats.urls} URLs • {stats.domains} domains • {stats.emails} emails
+            </p>
+          )}
+
           <p><strong>IPs:</strong> {iocs.ips.length ? iocs.ips.join(', ') : 'None'}</p>
           <p><strong>URLs:</strong> {iocs.urls.length ? iocs.urls.join(', ') : 'None'}</p>
           <p><strong>Domains:</strong> {iocs.domains.length ? iocs.domains.join(', ') : 'None'}</p>

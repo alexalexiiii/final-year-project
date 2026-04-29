@@ -129,9 +129,9 @@ export default function App() {
               />
 
               <PDFAnalysis
-                metadata={(analysisData as any).pdf?.metadata}
-                objects={(analysisData as any).pdf?.objects}
-                suspicious={analysisData.suspicious}
+               metadata={(analysisData as any).suspicious?.pdf_features}
+               objects={(analysisData as any).suspicious?.pdfid_flags}
+               suspicious={analysisData.suspicious}
               />
 
               <FlareToolsPanel
