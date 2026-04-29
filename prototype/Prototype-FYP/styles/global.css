@@ -236,3 +236,89 @@ label {
 .badge.pink {
   background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
 }
+
+/* Warning Alert Box */
+.warning-box {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(153, 27, 27, 0.1) 100%);
+  border: 2px solid #dc2626;
+  border-radius: var(--radius);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.warning-icon {
+  font-size: 1.5rem;
+  min-width: 24px;
+  text-align: center;
+  color: #fca5a5;
+}
+
+.warning-content {
+  flex: 1;
+}
+
+.warning-content h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fecaca;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+}
+
+.warning-content p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(252, 165, 165, 0.95);
+  margin: 0 0 0.75rem 0;
+}
+
+.warning-close {
+  background: none;
+  border: none;
+  color: #fca5a5;
+  cursor: pointer;
+  font-size: 1.25rem;
+  padding: 0;
+  min-width: auto;
+  box-shadow: none;
+  transition: color 0.2s ease;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+.warning-close:hover {
+  color: #fecaca;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Temporary warning - fade out after 10 seconds */
+.warning-box.temporary {
+  animation: slideIn 0.3s ease-out, slideOut 0.3s ease-in 9.7s forwards;
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}

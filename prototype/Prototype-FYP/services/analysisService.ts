@@ -57,7 +57,8 @@ async function getFileFromOfficeJS(
               type: content.contentType || "application/octet-stream"
             });
 
-            const file = new File([blob], content.name || "attachment.bin");
+            const filename = content.name || "attachment.bin";
+            const file = new File([blob], filename);
 
             return resolve(file);
           }

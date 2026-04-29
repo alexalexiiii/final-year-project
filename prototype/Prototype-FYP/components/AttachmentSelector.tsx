@@ -3,8 +3,10 @@ import { toast } from 'sonner';
 import { analyzeAttachment } from '../services/analysisService';
 import type { OutlookAttachment, AnalysisData } from '../types/analysis';
 
+/// <reference types="office-js" />
+
 interface AttachmentSelectorProps {
-  mailboxItem: Office.MessageRead;
+  mailboxItem: Office.MessageRead | null;
   onSelectAttachment: (name: string) => void;
   onAnalysisComplete: (data: AnalysisData) => void;
 }
@@ -21,13 +23,20 @@ export function AttachmentSelector({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
-    if (mailboxItem?.attachments) {
-      const regularAttachments = mailboxItem.attachments.filter(
-        (att: OutlookAttachment) => !att.isInline
-      );
-      setAttachments(regularAttachments);
-    }
-  }, [mailboxItem]);
+  if (mailboxItem?.attachments) {
+    const mapped: OutlookAttachment[] = mailboxItem.attachments
+      .filter(att => !att.isInline)
+      .map(att => ({
+        id: att.id,
+        name: att.name,
+        size: att.size,
+        contentType: att.contentType,
+        isInline: att.isInline
+      }));
+
+    setAttachments(mapped);
+  }
+}, [mailboxItem]);
 
   const handleAnalyze = async () => {
     if (!selectedFile || !selectedAttachmentId) {

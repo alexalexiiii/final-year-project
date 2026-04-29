@@ -16,7 +16,13 @@ import type { AnalysisData } from '../types/analysis';
 export default function App() {
   const [selectedAttachment, setSelectedAttachment] = useState<string | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
-  const { isOfficeInitialized, mailboxItem, isLoading, error } = useOfficeContext();
+
+  const {
+    isOfficeInitialized,
+    mailboxItem,
+    isLoading,
+    error
+  } = useOfficeContext();
 
   // Loading state
   if (isLoading || !isOfficeInitialized) {
@@ -53,7 +59,7 @@ export default function App() {
       <div className="header">
         <div className="header-row">
           <div className="logo-box">
-            <Shield style={{ width: 20, height: 20, color: "#dc2626" }} />
+            <Shield style={{ width: 60, height: 60, color: "#b580ff" }} />
           </div>
           <div>
             <h1>AnalysIT Attachment Analyser</h1>
@@ -67,12 +73,12 @@ export default function App() {
         <div className="content stack">
 
           <AttachmentSelector
-            mailboxItem={mailboxItem}
+            mailboxItem={mailboxItem as Office.MessageRead | null}
             onSelectAttachment={setSelectedAttachment}
             onAnalysisComplete={setAnalysisData}
           />
 
-          {/* ONLY render when we have data */}
+          {/* Render only when analysis exists */}
           {selectedAttachment && analysisData && (
             <>
               {/* Overview */}
@@ -94,18 +100,22 @@ export default function App() {
                 strings={analysisData.floss || []}
               />
 
-              {/* Sender / Email context panel */}
+              {/* Sender Info (FIXED) */}
               <SenderInfoPanel
-                email={analysisData.email}
+                mailboxItem={mailboxItem as Office.MessageRead | null}
               />
 
-              {/* Tools / summary panel */}
+              {/* FLARE Tools Panel (FIXED) */}
               <FlareToolsPanel
                 attachmentName={selectedAttachment}
                 fileHash={analysisData.hash}
                 threatLevel={analysisData.threatLevel}
                 suspicious={analysisData.suspicious}
-                extractedStrings={analysisData.floss?.map(s => s.value) || []}
+                extractedStrings={analysisData.floss || []}
+                capabilities={analysisData.capa?.capabilities || []}
+                peHeaders={analysisData.pe?.headers || null}
+                peSections={analysisData.pe?.sections || []}
+                mailboxItem={mailboxItem as Office.MessageRead | null}
               />
             </>
           )}

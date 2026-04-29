@@ -18,9 +18,9 @@ export interface AnalysisData {
 
   hash: FileHash;
   fileType: string;
-  size: string;
+  size: number;
 
-  entropy: number; // FIXED: was string
+  entropy: number; 
   compiledTime?: string;
 
   sections: number;
@@ -29,10 +29,6 @@ export interface AnalysisData {
 
   threatLevel: ThreatLevel;
   suspicious: boolean;
-
-  // =========================
-  // 🔥 NEW PANEL STRUCTURE
-  // =========================
 
   pe?: PEAnalysisData;
   capa?: CapaAnalysisData;
@@ -88,7 +84,7 @@ export interface ExtractedString {
 }
 
 /**
- * EMAIL CONTEXT PANEL (NEW)
+ * EMAIL CONTEXT PANEL (SECURITY + HEADER FIELDS)
  */
 export interface EmailContext {
   from?: string;
@@ -97,9 +93,28 @@ export interface EmailContext {
   date?: string;
   messageId?: string;
 
-  // optional enrichment
+  to?: string[];
+  cc?: string[];
+  bcc?: string[];
+
   senderDomain?: string;
   isExternal?: boolean;
+
+  // Authentication results (core for your panel)
+  spf?: 'pass' | 'fail' | 'none' | 'softfail';
+  dkim?: 'pass' | 'fail' | 'none';
+  dmarc?: 'pass' | 'fail' | 'none';
+
+  // Header-level security (for Microsoft-style analysis view)
+  returnPath?: string;
+  replyTo?: string;
+  receivedHeaders?: string[];
+  authenticationResults?: string;
+
+  // Optional risk metadata (from your Python logic)
+  riskLevel?: 'low' | 'medium' | 'high';
+  riskScore?: number;
+  indicators?: string[];
 }
 
 /**

@@ -4,7 +4,6 @@ import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { ExportButton } from './ExportButton';
 import { 
   FileType, 
-  Hash, 
   HardDrive,
   AlertTriangle,
   CheckCircle2,
@@ -39,12 +38,13 @@ export function AnalysisOverview({ data }: AnalysisOverviewProps) {
 
   return (
     <div>
+
       {data.suspicious && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Suspicious File</AlertTitle>
+          <AlertTitle>Suspicious File Detected</AlertTitle>
           <AlertDescription>
-            This file may be unsafe. Proceed with caution.
+            This file contains indicators of malicious or unusual behavior.
           </AlertDescription>
         </Alert>
       )}
@@ -53,7 +53,7 @@ export function AnalysisOverview({ data }: AnalysisOverviewProps) {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle>Analysis Overview</CardTitle>
+              <CardTitle>File Overview</CardTitle>
               <CardDescription className="mt-1 break-all">
                 {data.filename}
               </CardDescription>
@@ -61,6 +61,7 @@ export function AnalysisOverview({ data }: AnalysisOverviewProps) {
 
             <div className="flex flex-col items-end gap-2">
               {getThreatBadge(data.threatLevel)}
+
               <ExportButton 
                 analysisData={data} 
                 attachmentName={data.filename} 
@@ -72,32 +73,29 @@ export function AnalysisOverview({ data }: AnalysisOverviewProps) {
         <CardContent className="space-y-4">
 
           {/* File Type */}
-          <div className="flex items-start gap-3">
-            <FileType className="w-4 h-4 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="text-xs text-muted-foreground">File Type</p>
-              <p className="text-sm">{data.fileType}</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileType className="w-4 h-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Type</span>
             </div>
+            <span className="text-sm">{data.fileType}</span>
           </div>
 
           {/* File Size */}
-          <div className="flex items-start gap-3">
-            <HardDrive className="w-4 h-4 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="text-xs text-muted-foreground">Size</p>
-              <p className="text-sm">{data.size}</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <HardDrive className="w-4 h-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Size</span>
             </div>
+            <span className="text-sm">{data.size}</span>
           </div>
 
-          {/* Hashes */}
-          <div className="flex items-start gap-3">
-            <Hash className="w-4 h-4 text-muted-foreground mt-0.5" />
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">SHA-256</p>
-              <p className="text-xs font-mono break-all">
-                {data.hash.sha256}
-              </p>
-            </div>
+          {/* SHA-256 ONLY (cleaned) */}
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground">SHA-256</span>
+            <p className="text-xs font-mono break-all">
+              {data.hash.sha256}
+            </p>
           </div>
 
         </CardContent>
