@@ -6,7 +6,7 @@ import { PEAnalysis } from '../components/PEAnalysis';
 import { CapabilitiesAnalysis } from '../components/CapabilitiesAnalysis';
 import { StringsAnalysis } from '../components/StringsAnalysis';
 import { SenderInfoPanel } from '../components/SenderInfoPanel';
-
+import { PDFAnalysis } from '../components/PDFInformationPanel';
 import { Shield, AlertCircle } from 'lucide-react';
 import { useOfficeContext } from '../hooks/useOfficeContext';
 import { Toaster } from '../components/ui/sonner';
@@ -16,6 +16,9 @@ import type { AnalysisData } from '../types/analysis';
 export default function App() {
   const [selectedAttachment, setSelectedAttachment] = useState<string | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+
+  // NEW: consent state
+  const [acceptedWarning, setAcceptedWarning] = useState(false);
 
   const {
     isOfficeInitialized,
@@ -55,6 +58,32 @@ export default function App() {
     <div className="app">
       <Toaster />
 
+      {/* ================= WARNING MODAL ================= */}
+      {!acceptedWarning && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <AlertCircle className="w-6 h-6 text-yellow-500" />
+              <h2>Important Notice</h2>
+            </div>
+
+            <p className="modal-text">
+              This tool performs <b>OSINT enrichment</b> and external analysis.
+              <br /><br />
+              Do <b>NOT upload sensitive, personal, or corporate data</b>.
+              Uploaded files may be processed for enrichment and analysis purposes.
+            </p>
+
+            <button
+              className="modal-button"
+              onClick={() => setAcceptedWarning(true)}
+            >
+              I Understand & Continue
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="header">
         <div className="header-row">
@@ -68,8 +97,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="main">
+      {/* Main Content (disabled behind modal) */}
+      <div className={`main ${!acceptedWarning ? 'disabled' : ''}`}>
         <div className="content stack">
 
           <AttachmentSelector
@@ -78,34 +107,33 @@ export default function App() {
             onAnalysisComplete={setAnalysisData}
           />
 
-          {/* Render only when analysis exists */}
           {selectedAttachment && analysisData && (
             <>
-              {/* Overview */}
               <AnalysisOverview data={analysisData} />
 
-              {/* PE Analysis */}
               <PEAnalysis
-                headers={analysisData.pe?.headers}
-                sections={analysisData.pe?.sections}
+                headers={(analysisData as any).pe?.headers}
+                sections={(analysisData as any).pe?.sections}
               />
 
-              {/* CAPA */}
               <CapabilitiesAnalysis
                 capabilities={analysisData.capa?.capabilities || []}
               />
 
-              {/* FLOSS */}
               <StringsAnalysis
                 strings={analysisData.floss || []}
               />
 
-              {/* Sender Info (FIXED) */}
               <SenderInfoPanel
                 mailboxItem={mailboxItem as Office.MessageRead | null}
               />
 
-              {/* FLARE Tools Panel (FIXED) */}
+              <PDFAnalysis
+                metadata={(analysisData as any).pdf?.metadata}
+                objects={(analysisData as any).pdf?.objects}
+                suspicious={analysisData.suspicious}
+              />
+
               <FlareToolsPanel
                 attachmentName={selectedAttachment}
                 fileHash={analysisData.hash}
@@ -113,8 +141,8 @@ export default function App() {
                 suspicious={analysisData.suspicious}
                 extractedStrings={analysisData.floss || []}
                 capabilities={analysisData.capa?.capabilities || []}
-                peHeaders={analysisData.pe?.headers || null}
-                peSections={analysisData.pe?.sections || []}
+                peHeaders={(analysisData as any).pe?.headers || null}
+                peSections={(analysisData as any).pe?.sections || []}
                 mailboxItem={mailboxItem as Office.MessageRead | null}
               />
             </>
@@ -122,6 +150,62 @@ export default function App() {
 
         </div>
       </div>
+
+      {/* ================= MODAL STYLES ================= */}
+      <style>{`
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.75);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+        }
+
+        .modal-card {
+          background: #111827;
+          color: #ffffff;
+          padding: 24px;
+          border-radius: 12px;
+          width: 420px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .modal-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 12px;
+        }
+
+        .modal-text {
+          font-size: 14px;
+          color: #d1d5db;
+          line-height: 1.5;
+          margin-bottom: 20px;
+        }
+
+        .modal-button {
+          width: 100%;
+          padding: 10px;
+          border: none;
+          border-radius: 8px;
+          background: #7c3aed;
+          color: white;
+          cursor: pointer;
+          font-weight: 600;
+        }
+
+        .modal-button:hover {
+          background: #6d28d9;
+        }
+
+        .disabled {
+          pointer-events: none;
+          opacity: 0.4;
+        }
+      `}</style>
     </div>
   );
 }

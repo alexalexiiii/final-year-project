@@ -30,7 +30,7 @@ export interface AnalysisData {
   threatLevel: ThreatLevel;
   suspicious: boolean;
 
-  pe?: PEAnalysisData;
+  pdfid?: PEAnalysisData;
   capa?: CapaAnalysisData;
   floss?: ExtractedString[];
   email?: EmailContext;
@@ -61,6 +61,19 @@ export interface PEHeader {
   checksum: string;
 }
 
+/**
+ * PDF PANEL
+ */
+export interface PDFMetadata {
+  title?: string;
+  author?: string;
+  creator?: string;
+  objectheaders?: string;
+  producer?: string;
+  creationDate?: string;
+  modDate?: string;
+  trapped?: string;
+}
 /**
  * CAPA PANEL
  */

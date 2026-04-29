@@ -5,6 +5,7 @@ import { PEAnalysis } from './PEAnalysis';
 import { RemediationPanel } from './RemediationPanel';
 import { OSINTPanel } from './OSINTpanel';
 import { SenderInfoPanel } from './SenderInfoPanel';
+import { PDFAnalysis } from './PDFInformationPanel';
 
 import {
   Code2,
@@ -12,7 +13,8 @@ import {
   FileCode,
   ShieldAlert,
   Globe,
-  Mail
+  Mail,
+  FileText
 } from 'lucide-react';
 
 import type {
@@ -31,7 +33,6 @@ interface FlareToolsPanelProps {
   threatLevel: ThreatLevel;
   suspicious: boolean;
 
-  // real structured data (not just string[])
   extractedStrings: ExtractedString[];
   capabilities?: Capability[];
 
@@ -39,6 +40,10 @@ interface FlareToolsPanelProps {
   peSections?: PESection[];
 
   mailboxItem?: OfficeMailboxItem | null;
+
+  // OPTIONAL: add these for PDF support
+  pdfMetadata?: any;
+  pdfObjects?: any[];
 }
 
 export function FlareToolsPanel({
@@ -50,7 +55,9 @@ export function FlareToolsPanel({
   capabilities = [],
   peHeaders = null,
   peSections = [],
-  mailboxItem = null
+  mailboxItem = null,
+  pdfMetadata = null,
+  pdfObjects = []
 }: FlareToolsPanelProps) {
   return (
     <div className="space-y-3">
@@ -63,8 +70,8 @@ export function FlareToolsPanel({
 
       <Tabs defaultValue="strings" className="w-full">
 
-        {/* UPDATED TAB GRID (added sender tab = 7 tabs total) */}
-        <TabsList className="grid grid-cols-7 w-full">
+        {/* UPDATED GRID (now 8 tabs) */}
+        <TabsList className="grid grid-cols-8 w-full">
 
           <TabsTrigger value="strings" className="gap-1 text-xs">
             <Code2 className="w-3 h-3" />
@@ -81,7 +88,12 @@ export function FlareToolsPanel({
             PE Info
           </TabsTrigger>
 
-          {/* NEW */}
+          {/* NEW PDF TAB */}
+          <TabsTrigger value="pdf" className="gap-1 text-xs">
+            <FileText className="w-3 h-3" />
+            PDF
+          </TabsTrigger>
+
           <TabsTrigger value="sender" className="gap-1 text-xs">
             <Mail className="w-3 h-3" />
             Sender
@@ -94,7 +106,7 @@ export function FlareToolsPanel({
 
           <TabsTrigger value="remediation" className="gap-1 text-xs">
             <ShieldAlert className="w-3 h-3" />
-            Remidiation
+            Remediation Actions
           </TabsTrigger>
 
         </TabsList>
@@ -114,7 +126,16 @@ export function FlareToolsPanel({
           <PEAnalysis headers={peHeaders} sections={peSections} />
         </TabsContent>
 
-        {/* NEW: Sender Info */}
+        {/* NEW PDF PANEL */}
+        <TabsContent value="pdf" className="mt-4">
+          <PDFAnalysis
+            metadata={pdfMetadata}
+            objects={pdfObjects}
+            suspicious={suspicious}
+          />
+        </TabsContent>
+
+        {/* Sender */}
         <TabsContent value="sender" className="mt-4">
           <SenderInfoPanel mailboxItem={mailboxItem} />
         </TabsContent>
