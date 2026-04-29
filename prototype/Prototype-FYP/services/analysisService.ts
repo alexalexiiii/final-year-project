@@ -31,13 +31,13 @@ async function getFileFromOfficeJS(
       (result: any) => {
 
         if (result.status !== Office.AsyncResultStatus.Succeeded) {
-          console.error("❌ Attachment fetch failed:", result.error);
+          console.error("Attachment fetch failed:", result.error);
           return reject(new Error("Attachment extraction failed"));
         }
 
         const content = result.value;
 
-        console.log("📦 ATTACHMENT RAW:", content);
+        console.log("ATTACHMENT RAW:", content);
 
         try {
           if (
@@ -78,7 +78,7 @@ async function getFileFromOfficeJS(
  * Send file to backend
  */
 async function fetchAnalysisFromBackend(file: File) {
-  console.log("📤 Sending file:", file.name);
+  console.log("Sending file:", file.name);
 
   const formData = new FormData();
   formData.append("file", file);
@@ -96,7 +96,7 @@ async function fetchAnalysisFromBackend(file: File) {
 
   const data = await res.json();
 
-  console.log("✅ Backend response:", data);
+  console.log("Backend response:", data);
 
   return data;
 }
@@ -113,7 +113,7 @@ export async function analyzeAttachment(
     // 1. Extract file
     const file = await getFileFromOfficeJS(attachmentId);
 
-    console.log("✅ File extracted:", file);
+    console.log("File extracted:", file);
 
     if (!file) {
       throw new Error("File extraction returned null");

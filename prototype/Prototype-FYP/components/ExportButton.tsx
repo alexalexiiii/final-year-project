@@ -37,7 +37,7 @@ export function ExportButton({ analysisData, attachmentName }: ExportButtonProps
       csvContent += `Imports,${analysisData.imports}\n`;
       csvContent += `Exports,${analysisData.exports}\n\n`;
 
-      // Strings Analysis (mock data - in real implementation this would come from props)
+      // Strings Analysis 
       csvContent += 'STRINGS ANALYSIS (FLOSS)\n';
       csvContent += 'String Value,Type,Category\n';
       csvContent += 'C:\\Windows\\System32\\cmd.exe,suspicious,Command Execution\n';

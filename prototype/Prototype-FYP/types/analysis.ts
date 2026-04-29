@@ -1,4 +1,4 @@
-// Core analysis data types for AnalysIT Attachment Analyser
+import { LucideIcon } from "lucide-react";
 
 export type ThreatLevel = 'low' | 'medium' | 'high' | 'critical';
 export type StringType = 'suspicious' | 'normal';
@@ -10,31 +10,42 @@ export interface FileHash {
   sha256: string;
 }
 
+/**
+ * MAIN ANALYSIS OUTPUT (UPDATED FOR YOUR PANELS)
+ */
 export interface AnalysisData {
   filename: string;
+
   hash: FileHash;
   fileType: string;
   size: string;
-  entropy: string;
-  compiledTime: string;
+
+  entropy: number; // FIXED: was string
+  compiledTime?: string;
+
   sections: number;
   imports: number;
   exports: number;
+
   threatLevel: ThreatLevel;
   suspicious: boolean;
+
+  // =========================
+  // 🔥 NEW PANEL STRUCTURE
+  // =========================
+
+  pe?: PEAnalysisData;
+  capa?: CapaAnalysisData;
+  floss?: ExtractedString[];
+  email?: EmailContext;
 }
 
-export interface ExtractedString {
-  value: string;
-  type: StringType;
-  category: string;
-}
-
-export interface Capability {
-  category: string;
-  icon: any; // LucideIcon type
-  severity: CapabilitySeverity;
-  items: string[];
+/**
+ * PE PANEL
+ */
+export interface PEAnalysisData {
+  headers?: PEHeader;
+  sections?: PESection[];
 }
 
 export interface PESection {
@@ -54,6 +65,46 @@ export interface PEHeader {
   checksum: string;
 }
 
+/**
+ * CAPA PANEL
+ */
+export interface Capability {
+  category: string;
+  severity: CapabilitySeverity;
+  items: string[];
+}
+
+export interface CapaAnalysisData {
+  capabilities: Capability[];
+}
+
+/**
+ * FLOSS / STRINGS PANEL
+ */
+export interface ExtractedString {
+  value: string;
+  type: StringType;
+  category: string;
+}
+
+/**
+ * EMAIL CONTEXT PANEL (NEW)
+ */
+export interface EmailContext {
+  from?: string;
+  fromEmail?: string;
+  subject?: string;
+  date?: string;
+  messageId?: string;
+
+  // optional enrichment
+  senderDomain?: string;
+  isExternal?: boolean;
+}
+
+/**
+ * IMPORTED FUNCTIONS (optional future PE expansion)
+ */
 export interface ImportedFunction {
   dll: string;
   function: string;
@@ -61,6 +112,9 @@ export interface ImportedFunction {
   description: string;
 }
 
+/**
+ * OUTLOOK ATTACHMENTS
+ */
 export interface OutlookAttachment {
   id: string;
   name: string;
@@ -79,14 +133,21 @@ export interface OfficeMailboxItem {
   internetMessageId?: string;
 }
 
+/**
+ * REMEDIATION / TOOLING
+ */
 export interface RemediationRecommendation {
-  priority: CapabilitySeverity;
-  icon: any; // LucideIcon type
+  priority: 'critical' | 'high' | 'medium' | 'low';
   category: string;
   actions: string[];
+  icon: LucideIcon;
 }
 
-// ============= OSINT Types =============
+/**
+ * =========================
+ * OSINT TYPES (UNCHANGED)
+ * =========================
+ */
 
 export interface VirusTotalResult {
   positives: number;
@@ -144,7 +205,7 @@ export interface IPInfoResult {
   city: string;
   region: string;
   country: string;
-  loc: string; // latitude,longitude
+  loc: string;
   org: string;
   postal: string;
   timezone: string;
@@ -155,11 +216,13 @@ export interface OSINTData {
   abuseipdb: AbuseIPDBResult[];
   urlscan: URLScanResult[];
   ipinfo: IPInfoResult[];
+
   extractedIOCs: {
     ips: string[];
     urls: string[];
     domains: string[];
     emails: string[];
   };
+
   lastUpdated: string;
 }

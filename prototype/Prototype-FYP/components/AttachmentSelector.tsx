@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { analyzeAttachment } from '../services/analysisService';
-import type { OfficeMailboxItem, OutlookAttachment, AnalysisData } from '../types/analysis';
+import type { OutlookAttachment, AnalysisData } from '../types/analysis';
 
 interface AttachmentSelectorProps {
-  mailboxItem: OfficeMailboxItem | null;
+  mailboxItem: Office.MessageRead;
   onSelectAttachment: (name: string) => void;
   onAnalysisComplete: (data: AnalysisData) => void;
 }
 
-export function AttachmentSelector({ mailboxItem, onSelectAttachment, onAnalysisComplete }: AttachmentSelectorProps) {
+export function AttachmentSelector({
+  mailboxItem,
+  onSelectAttachment,
+  onAnalysisComplete
+}: AttachmentSelectorProps) {
+
   const [attachments, setAttachments] = useState<OutlookAttachment[]>([]);
   const [selectedFile, setSelectedFile] = useState('');
   const [selectedAttachmentId, setSelectedAttachmentId] = useState('');
@@ -17,7 +22,9 @@ export function AttachmentSelector({ mailboxItem, onSelectAttachment, onAnalysis
 
   useEffect(() => {
     if (mailboxItem?.attachments) {
-      const regularAttachments = mailboxItem.attachments.filter(att => !att.isInline);
+      const regularAttachments = mailboxItem.attachments.filter(
+        (att: OutlookAttachment) => !att.isInline
+      );
       setAttachments(regularAttachments);
     }
   }, [mailboxItem]);
@@ -35,12 +42,12 @@ export function AttachmentSelector({ mailboxItem, onSelectAttachment, onAnalysis
       const result = await analyzeAttachment(
         selectedAttachmentId,
         selectedFile,
-        mailboxItem
       );
 
       onAnalysisComplete(result);
       toast.success('Analysis complete');
-    } catch {
+    } catch (err) {
+      console.error(err);
       toast.error('Failed to analyze attachment');
     } finally {
       setIsAnalyzing(false);
@@ -50,21 +57,28 @@ export function AttachmentSelector({ mailboxItem, onSelectAttachment, onAnalysis
   return (
     <div className="card">
       <h2>Select Attachment</h2>
-      <p className="text-muted">Choose an attachment to analyze</p>
 
       {attachments.length === 0 ? (
         <p className="text-muted">No attachments found.</p>
       ) : (
         <>
           <div className="section">
-            <label>Attachment</label>
+            <label htmlFor="attachment-select">
+              Attachment
+            </label>
+
             <select
+              id="attachment-select"
+              aria-label="Select attachment to analyze"
               value={selectedFile}
               onChange={(e) => {
                 const name = e.target.value;
                 setSelectedFile(name);
 
-                const att = attachments.find(a => a.name === name);
+                const att = attachments.find(
+                  (att: OutlookAttachment) => att.name === name
+                );
+
                 if (att) setSelectedAttachmentId(att.id);
               }}
             >

@@ -2,9 +2,15 @@ import { useState } from 'react';
 import { AttachmentSelector } from '../components/AttachmentSelector';
 import { AnalysisOverview } from '../components/AnalysisOverview';
 import { FlareToolsPanel } from '../components/FlareToolsPanel';
+import { PEAnalysis } from '../components/PEAnalysis';
+import { CapabilitiesAnalysis } from '../components/CapabilitiesAnalysis';
+import { StringsAnalysis } from '../components/StringsAnalysis';
+import { SenderInfoPanel } from '../components/SenderInfoPanel';
+
 import { Shield, AlertCircle } from 'lucide-react';
 import { useOfficeContext } from '../hooks/useOfficeContext';
 import { Toaster } from '../components/ui/sonner';
+
 import type { AnalysisData } from '../types/analysis';
 
 export default function App() {
@@ -59,24 +65,51 @@ export default function App() {
       {/* Main Content */}
       <div className="main">
         <div className="content stack">
-          <AttachmentSelector 
+
+          <AttachmentSelector
             mailboxItem={mailboxItem}
             onSelectAttachment={setSelectedAttachment}
             onAnalysisComplete={setAnalysisData}
           />
 
+          {/* ONLY render when we have data */}
           {selectedAttachment && analysisData && (
             <>
+              {/* Overview */}
               <AnalysisOverview data={analysisData} />
-              <FlareToolsPanel 
+
+              {/* PE Analysis */}
+              <PEAnalysis
+                headers={analysisData.pe?.headers}
+                sections={analysisData.pe?.sections}
+              />
+
+              {/* CAPA */}
+              <CapabilitiesAnalysis
+                capabilities={analysisData.capa?.capabilities || []}
+              />
+
+              {/* FLOSS */}
+              <StringsAnalysis
+                strings={analysisData.floss || []}
+              />
+
+              {/* Sender / Email context panel */}
+              <SenderInfoPanel
+                email={analysisData.email}
+              />
+
+              {/* Tools / summary panel */}
+              <FlareToolsPanel
                 attachmentName={selectedAttachment}
                 fileHash={analysisData.hash}
                 threatLevel={analysisData.threatLevel}
                 suspicious={analysisData.suspicious}
-                extractedStrings={[]}
+                extractedStrings={analysisData.floss?.map(s => s.value) || []}
               />
             </>
           )}
+
         </div>
       </div>
     </div>
