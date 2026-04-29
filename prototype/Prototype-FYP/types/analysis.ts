@@ -1,5 +1,9 @@
 import { LucideIcon } from "lucide-react";
 
+/* =========================
+   CORE TYPES
+========================= */
+
 export type ThreatLevel = 'low' | 'medium' | 'high' | 'critical';
 export type StringType = 'suspicious' | 'normal';
 export type CapabilitySeverity = 'low' | 'medium' | 'high' | 'critical';
@@ -10,9 +14,30 @@ export interface FileHash {
   sha256: string;
 }
 
-/**
- * MAIN ANALYSIS OUTPUT (UPDATED FOR YOUR PANELS)
- */
+/* =========================
+   IOC
+========================= */
+
+export interface IOCData {
+  ips: string[];
+  urls: string[];
+  domains: string[];
+  emails: string[];
+}
+
+/* =========================
+   SUSPICIOUS (PDF + FLAGS)
+========================= */
+
+export interface SuspiciousData {
+  pdf_features: Record<string, number | boolean>;
+  pdfid_flags: Record<string, number>;
+}
+
+/* =========================
+   ANALYSIS DATA (MAIN EXPORT)
+========================= */
+
 export interface AnalysisData {
   filename: string;
 
@@ -20,7 +45,7 @@ export interface AnalysisData {
   fileType: string;
   size: number;
 
-  entropy: number; 
+  entropy: number;
   compiledTime?: string;
 
   sections: number;
@@ -28,7 +53,9 @@ export interface AnalysisData {
   exports: number;
 
   threatLevel: ThreatLevel;
-  suspicious: boolean;
+
+  suspicious: SuspiciousData;
+  iocs: IOCData;
 
   pdfid?: PEAnalysisData;
   capa?: CapaAnalysisData;
@@ -36,9 +63,10 @@ export interface AnalysisData {
   email?: EmailContext;
 }
 
-/**
- * PE PANEL
- */
+/* =========================
+   PE DATA
+========================= */
+
 export interface PEAnalysisData {
   headers?: PEHeader;
   sections?: PESection[];
@@ -61,22 +89,10 @@ export interface PEHeader {
   checksum: string;
 }
 
-/**
- * PDF PANEL
- */
-export interface PDFMetadata {
-  title?: string;
-  author?: string;
-  creator?: string;
-  objectheaders?: string;
-  producer?: string;
-  creationDate?: string;
-  modDate?: string;
-  trapped?: string;
-}
-/**
- * CAPA PANEL
- */
+/* =========================
+   CAPA
+========================= */
+
 export interface Capability {
   category: string;
   severity: CapabilitySeverity;
@@ -87,18 +103,20 @@ export interface CapaAnalysisData {
   capabilities: Capability[];
 }
 
-/**
- * FLOSS / STRINGS PANEL
- */
+/* =========================
+   STRINGS
+========================= */
+
 export interface ExtractedString {
   value: string;
   type: StringType;
   category: string;
 }
 
-/**
- * EMAIL CONTEXT PANEL (SECURITY + HEADER FIELDS)
- */
+/* =========================
+   EMAIL
+========================= */
+
 export interface EmailContext {
   from?: string;
   fromEmail?: string;
@@ -113,69 +131,23 @@ export interface EmailContext {
   senderDomain?: string;
   isExternal?: boolean;
 
-  // Authentication results (core for your panel)
   spf?: 'pass' | 'fail' | 'none' | 'softfail';
   dkim?: 'pass' | 'fail' | 'none';
   dmarc?: 'pass' | 'fail' | 'none';
 
-  // Header-level security (for Microsoft-style analysis view)
   returnPath?: string;
   replyTo?: string;
   receivedHeaders?: string[];
   authenticationResults?: string;
 
-  // Optional risk metadata (from your Python logic)
   riskLevel?: 'low' | 'medium' | 'high';
   riskScore?: number;
   indicators?: string[];
 }
 
-/**
- * IMPORTED FUNCTIONS (optional future PE expansion)
- */
-export interface ImportedFunction {
-  dll: string;
-  function: string;
-  suspicious: boolean;
-  description: string;
-}
-
-/**
- * OUTLOOK ATTACHMENTS
- */
-export interface OutlookAttachment {
-  id: string;
-  name: string;
-  size: number;
-  contentType: string;
-  isInline?: boolean;
-}
-
-export interface OfficeMailboxItem {
-  attachments: OutlookAttachment[];
-  subject?: string;
-  from?: {
-    displayName: string;
-    emailAddress: string;
-  };
-  internetMessageId?: string;
-}
-
-/**
- * REMEDIATION / TOOLING
- */
-export interface RemediationRecommendation {
-  priority: 'critical' | 'high' | 'medium' | 'low';
-  category: string;
-  actions: string[];
-  icon: LucideIcon;
-}
-
-/**
- * =========================
- * OSINT TYPES (UNCHANGED)
- * =========================
- */
+/* =========================
+   OSINT
+========================= */
 
 export interface VirusTotalResult {
   positives: number;
@@ -245,12 +217,7 @@ export interface OSINTData {
   urlscan: URLScanResult[];
   ipinfo: IPInfoResult[];
 
-  extractedIOCs: {
-    ips: string[];
-    urls: string[];
-    domains: string[];
-    emails: string[];
-  };
+  extractedIOCs: IOCData;
 
   lastUpdated: string;
 }

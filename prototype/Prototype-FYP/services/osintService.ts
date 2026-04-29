@@ -1,4 +1,5 @@
-import type { FileHash, OSINTData } from '../types/analysis';
+import type { FileHash } from '../types/analysis';
+import type { OSINTData } from '../types/analysis';
 
 export async function performOSINTAnalysis(
   fileHash: FileHash,
