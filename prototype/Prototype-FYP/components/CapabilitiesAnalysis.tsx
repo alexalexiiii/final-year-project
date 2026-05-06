@@ -62,6 +62,13 @@ export function CapabilitiesAnalysis({ capabilities = [] }: Props) {
         <div className="mt-4 p-3 bg-muted rounded flex gap-2">
           <AlertTriangle className="w-4 h-4 text-yellow-600" />
           <p className="text-xs text-muted-foreground">
+            Entropy
+          </p>
+        </div>
+
+        <div className="mt-4 p-3 bg-muted rounded flex gap-2">
+          <AlertTriangle className="w-4 h-4 text-yellow-600" />
+          <p className="text-xs text-muted-foreground">
             Capability detection is heuristic-based.
           </p>
         </div>

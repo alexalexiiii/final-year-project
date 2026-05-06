@@ -2,9 +2,10 @@ import type { AnalysisData } from "../types/analysis";
 
 interface PDFAnalysisProps {
   metadata?: any;
-  objects?: any;
+  objects?: string[];
   suspicious: AnalysisData["suspicious"];
 }
+
 
 export function PDFAnalysis({
   metadata,
@@ -41,20 +42,22 @@ export function PDFAnalysis({
          OBJECTS
       */}
       <div>
-        <h4>Objects</h4>
+  <h4>Objects</h4>
 
-        {objects && Object.keys(objects).length > 0 ? (
-          <ul>
-            {Object.entries(objects).map(([key, value]) => (
-              <li key={key}>
-                {key}: {String(value)}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No object data available</p>
-        )}
-      </div>
+  {objects && objects.length > 0 ? (
+    <ul>
+      {objects.map((obj, index) => (
+        <li key={index}>
+          <pre style={{ maxHeight: "200px", overflow: "auto" }}>
+            {obj.slice(0, 500)}
+          </pre>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p>No object data available</p>
+  )}
+</div>
 
       {/*   
          PDF FEATURES (PDFiD)

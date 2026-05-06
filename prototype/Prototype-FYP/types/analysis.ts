@@ -1,8 +1,8 @@
 import { LucideIcon } from "lucide-react";
 
-/* =========================
+/*   
    CORE TYPES
-========================= */
+   */
 
 export type ThreatLevel = 'low' | 'medium' | 'high' | 'critical';
 export type StringType = 'suspicious' | 'normal';
@@ -14,9 +14,9 @@ export interface FileHash {
   sha256: string;
 }
 
-/* =========================
+/*   
    IOC
-========================= */
+   */
 
 export interface IOCData {
   ips: string[];
@@ -25,18 +25,18 @@ export interface IOCData {
   emails: string[];
 }
 
-/* =========================
+/*   
    SUSPICIOUS (PDF + FLAGS)
-========================= */
+   */
 
 export interface SuspiciousData {
   pdf_features: Record<string, number | boolean>;
   pdfid_flags: Record<string, number>;
 }
 
-/* =========================
+/*   
    ANALYSIS DATA (MAIN EXPORT)
-========================= */
+   */
 
 export interface AnalysisData {
   filename: string;
@@ -63,9 +63,9 @@ export interface AnalysisData {
   email?: EmailContext;
 }
 
-/* =========================
+/*   
    PE DATA
-========================= */
+   */
 
 export interface PEAnalysisData {
   headers?: PEHeader;
@@ -89,9 +89,9 @@ export interface PEHeader {
   checksum: string;
 }
 
-/* =========================
+/*   
    CAPA
-========================= */
+   */
 
 export interface Capability {
   category: string;
@@ -103,9 +103,9 @@ export interface CapaAnalysisData {
   capabilities: Capability[];
 }
 
-/* =========================
+/*   
    STRINGS
-========================= */
+   */
 
 export interface ExtractedString {
   value: string;
@@ -113,9 +113,9 @@ export interface ExtractedString {
   category: string;
 }
 
-/* =========================
+/*   
    EMAIL
-========================= */
+   */
 
 export interface EmailContext {
   from?: string;
@@ -145,9 +145,17 @@ export interface EmailContext {
   indicators?: string[];
 }
 
-/* =========================
+interface OutlookAttachment {
+  id: string;
+  name: string;
+  size: number;
+  contentType: string;
+  isInline: boolean;
+}
+
+/*   
    OSINT
-========================= */
+   */
 
 export interface VirusTotalResult {
   positives: number;
@@ -222,9 +230,9 @@ export interface OSINTData {
   lastUpdated: string;
 }
 
-/* =========================
+/*   
   Mailbox Item (OfficeJS)
-========================= */
+   */
 export interface OfficeMailboxItem {
   attachments: any[];
   subject?: string;

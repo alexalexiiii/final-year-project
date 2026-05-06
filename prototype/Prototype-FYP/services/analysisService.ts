@@ -66,18 +66,17 @@ async function fetchAnalysisFromBackend(file: File) {
 }
 
 export async function analyzeAttachment(
-  attachmentId: string
-): Promise<AnalysisData> {
+attachmentId: string, selectedFile: string): Promise<AnalysisData> {
   try {
     const file = await getFileFromOfficeJS(attachmentId);
     const backendResult = await fetchAnalysisFromBackend(file);
 
-    // 🔥 DEBUG — YOU NEED THIS RIGHT NOW
+    
     console.log("BACKEND RESULT:", backendResult);
 
-    // -----------------------------
+    
     // PDF DATA (robust mapping)
-    // -----------------------------
+    
     const pdfFeatures =
       backendResult?.pdf_features ??
       backendResult?.pdfFeatures ??
@@ -89,9 +88,9 @@ export async function analyzeAttachment(
       backendResult?.pdfid?.data ??
       {};
 
-    // -----------------------------
+    
     // IOC DATA (robust mapping)
-    // -----------------------------
+    
     const iocsRaw =
   backendResult?.iocs ??
   backendResult?.extractedIOCs ??
@@ -104,9 +103,9 @@ const iocs = {
   emails: iocsRaw.emails ?? []
 };
 
-    // -----------------------------
+    
     // SUSPICIOUS DATA (FIXED TYPE)
-    // -----------------------------
+    
     const suspicious = {
       pdf_features: pdfFeatures ?? {},
       pdfid_flags: pdfFlags ?? {}
@@ -133,10 +132,9 @@ const iocs = {
 
       threatLevel: backendResult?.threatLevel ?? "low",
 
-      // ✅ FIXED (no longer boolean)
+      
       suspicious,
 
-      // ✅ PASS RAW PDFID FOR UI IF NEEDED
       pdfid: {
         headers: undefined,
         sections: undefined

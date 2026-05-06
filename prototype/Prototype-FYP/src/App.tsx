@@ -2,11 +2,6 @@ import { useState } from 'react';
 import { AttachmentSelector } from '../components/AttachmentSelector';
 import { AnalysisOverview } from '../components/AnalysisOverview';
 import { FlareToolsPanel } from '../components/FlareToolsPanel';
-import { PEAnalysis } from '../components/PEAnalysis';
-import { CapabilitiesAnalysis } from '../components/CapabilitiesAnalysis';
-import { StringsAnalysis } from '../components/StringsAnalysis';
-import { SenderInfoPanel } from '../components/SenderInfoPanel';
-import { PDFAnalysis } from '../components/PDFInformationPanel';
 import { Shield, AlertCircle } from 'lucide-react';
 import { useOfficeContext } from '../hooks/useOfficeContext';
 import { Toaster } from '../components/ui/sonner';
@@ -110,29 +105,6 @@ export default function App() {
           {selectedAttachment && analysisData && (
             <>
               <AnalysisOverview data={analysisData} />
-
-              <PEAnalysis
-                headers={(analysisData as any).pe?.headers}
-                sections={(analysisData as any).pe?.sections}
-              />
-
-              <CapabilitiesAnalysis
-                capabilities={analysisData.capa?.capabilities || []}
-              />
-
-              <StringsAnalysis
-                strings={analysisData.floss || []}
-              />
-
-              <SenderInfoPanel
-                mailboxItem={mailboxItem as Office.MessageRead | null}
-              />
-
-              <PDFAnalysis
-               metadata={(analysisData as any).suspicious?.pdf_features}
-               objects={(analysisData as any).suspicious?.pdfid_flags}
-               suspicious={analysisData.suspicious}
-              />
 
               <FlareToolsPanel
                 attachmentName={selectedAttachment}

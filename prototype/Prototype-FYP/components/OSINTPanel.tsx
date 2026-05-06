@@ -8,7 +8,7 @@ import {
   Globe,
   Shield,
   Server,
-  Link,
+  Link as LinkIcon,
   Hash,
   AlertTriangle,
   CheckCircle2,
@@ -48,15 +48,28 @@ export function OSINTPanel({ fileHash, extractedStrings }: OSINTPanelProps) {
     load();
   }, [fileHash, extractedStrings]);
 
-  const getThreatLevel = (score: number) => {
-    if (score >= 75)
-      return { label: 'CRITICAL', icon: XCircle, variant: 'destructive' as const };
-    if (score >= 50)
-      return { label: 'HIGH', icon: AlertTriangle, variant: 'destructive' as const };
-    if (score >= 25)
-      return { label: 'MEDIUM', icon: AlertTriangle, variant: 'default' as const };
+  const vtHash = fileHash.sha256 || fileHash.sha1 || fileHash.md5;
 
-    return { label: 'LOW', icon: CheckCircle2, variant: 'secondary' as const };
+  /* =========================
+     🔗 HARD CODED LINKS
+     ========================= */
+
+  const virusTotalFileLink = vtHash
+    ? `https://www.virustotal.com/gui/file/${vtHash}`
+    : 'https://www.virustotal.com/';
+
+  const abuseIpDbLink = 'https://www.abuseipdb.com/';
+  const urlScanLink = 'https://urlscan.io/';
+
+  const vt = data?.virustotal;
+  const abuse = data?.abuseipdb ?? [];
+  const urls = data?.urlscan ?? [];
+
+  const iocs = data?.extractedIOCs ?? {
+    ips: [],
+    urls: [],
+    domains: [],
+    emails: []
   };
 
   const calculateScore = () => {
@@ -64,24 +77,35 @@ export function OSINTPanel({ fileHash, extractedStrings }: OSINTPanelProps) {
 
     let score = 0;
 
-    const vt = data.virustotal;
-
-    if (vt?.total && vt.total > 0) {
+    if (vt?.total) {
       score += (vt.positives / vt.total) * 40;
     }
 
     const abuseHits =
-      data.abuseipdb?.filter(i => i.abuseConfidenceScore > 50)?.length || 0;
+      abuse.filter((a) => a.abuseConfidenceScore > 50).length;
 
     score += abuseHits * 15;
 
     const maliciousUrls =
-      data.urlscan?.filter(u => u?.verdict?.malicious)?.length || 0;
+      urls.filter((u) => u?.verdict?.malicious).length;
 
     score += maliciousUrls * 20;
 
     return Math.min(100, Math.round(score));
   };
+
+  const score = calculateScore();
+
+  const threat =
+    score >= 75
+      ? { label: 'CRITICAL', icon: XCircle, variant: 'destructive' as const }
+      : score >= 50
+      ? { label: 'HIGH', icon: AlertTriangle, variant: 'destructive' as const }
+      : score >= 25
+      ? { label: 'MEDIUM', icon: AlertTriangle, variant: 'default' as const }
+      : { label: 'LOW', icon: CheckCircle2, variant: 'secondary' as const };
+
+  const ThreatIcon = threat.icon;
 
   if (loading) {
     return (
@@ -109,121 +133,104 @@ export function OSINTPanel({ fileHash, extractedStrings }: OSINTPanelProps) {
 
   if (!data) return null;
 
-  const score = calculateScore();
-  const threat = getThreatLevel(score);
-  const ThreatIcon = threat.icon;
-
-  const vt = data.virustotal;
-  const abuse = data.abuseipdb ?? [];
-  const urls = data.urlscan ?? [];
-
- const iocs = data?.extractedIOCs ?? {
-  ips: [],
-  urls: [],
-  domains: [],
-  emails: []
-};
-
-  const stats = (data as any).iocStats;
-
   return (
     <div className="space-y-4">
 
-      {/* Threat Overview */}
+      {/* HEADER */}
       <Card>
         <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="w-4 h-4" />
-                OSINT Intelligence
-              </CardTitle>
-              <CardDescription>
-                External threat intelligence correlation
-              </CardDescription>
-            </div>
+          <CardTitle className="flex justify-between items-center">
+            <span className="flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+              OSINT Intelligence
+            </span>
 
-            <Badge variant={threat.variant} className="gap-1">
-              <ThreatIcon className="w-3 h-3" />
-              {threat.label}
+            <Badge variant={threat.variant}>
+              <ThreatIcon className="w-3 h-3 mr-1" />
+              {threat.label} • {score}/100
             </Badge>
-          </div>
+          </CardTitle>
+
+          <CardDescription>
+            Based on VirusTotal, AbuseIPDB, URLScan, and extracted IOCs.
+          </CardDescription>
         </CardHeader>
-
-        <CardContent>
-          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-muted-foreground" />
-              <p className="text-sm font-medium">Threat Score</p>
-            </div>
-
-            <p className="text-xl font-bold">{score}/100</p>
-          </div>
-        </CardContent>
       </Card>
 
-      {/* VirusTotal */}
+      {/* HARD CODED INVESTIGATION LINKS */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Shield className="w-4 h-4" />
-            VirusTotal
+            <LinkIcon className="w-4 h-4" />
+            Investigation Links
           </CardTitle>
-          <CardDescription>File reputation analysis</CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-2 text-sm">
+          <a href={virusTotalFileLink} target="_blank" rel="noopener noreferrer" className="block underline text-blue-500">
+            VirusTotal File Lookup 
+          </a>
+
+          <a href={abuseIpDbLink} target="_blank" rel="noopener noreferrer" className="block underline text-blue-500">
+            AbuseIPDB 
+          </a>
+
+          <a href={urlScanLink} target="_blank" rel="noopener noreferrer" className="block underline text-blue-500">
+            URLScan 
+          </a>
+        </CardContent>
+      </Card>
+
+      {/* VIRUSTOTAL */}
+      <Card>
+        <CardHeader>
+          <CardTitle>VirusTotal</CardTitle>
         </CardHeader>
 
         <CardContent>
           {vt?.total ? (
-            <div className="text-sm flex justify-between">
-              <span>Detections</span>
-              <span className="font-mono">
-                {vt.positives ?? 0}/{vt.total ?? 0}
-              </span>
-            </div>
+            <p>{vt.positives}/{vt.total} detections</p>
           ) : (
-            <p className="text-sm text-muted-foreground">No data available</p>
+            <p className="text-muted-foreground">No data available</p>
           )}
         </CardContent>
       </Card>
 
-      {/* IP Intelligence */}
+      {/* IPs */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Server className="w-4 h-4" />
-            IP Intelligence
-          </CardTitle>
+          <CardTitle>IP Intelligence</CardTitle>
         </CardHeader>
 
-        <CardContent className="space-y-2">
-          {abuse.length ? (
-            abuse.map((ip, i) => (
-              <div key={i} className="flex justify-between text-sm border-b py-2">
-                <span className="font-mono">{ip.ipAddress}</span>
-                <Badge variant={ip.abuseConfidenceScore > 50 ? 'destructive' : 'secondary'}>
-                  {ip.abuseConfidenceScore}%
-                </Badge>
-              </div>
+        <CardContent>
+          {iocs.ips.length ? (
+            iocs.ips.map((ip: string, i: number) => (
+              <a
+                key={i}
+                href={`https://www.abuseipdb.com/check/${ip}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block underline"
+              >
+                {ip}
+              </a>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground">No IP data</p>
+            <p className="text-muted-foreground">None</p>
           )}
         </CardContent>
       </Card>
 
-      {/* URL Intelligence */}
+      {/* URLs */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Link className="w-4 h-4" />
-            URL Intelligence
-          </CardTitle>
+          <CardTitle>URL Intelligence</CardTitle>
         </CardHeader>
 
         <CardContent>
           {urls.length ? (
-            urls.map((u, i) => (
-              <div key={i} className="flex justify-between text-sm border-b py-2">
+            urls.map((u: any, i: number) => (
+              <div key={i} className="flex justify-between text-sm">
                 <span className="break-all">{u.url}</span>
                 {u?.verdict?.malicious && (
                   <Badge variant="destructive">Malicious</Badge>
@@ -231,32 +238,8 @@ export function OSINTPanel({ fileHash, extractedStrings }: OSINTPanelProps) {
               </div>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground">No URL data</p>
+            <p className="text-muted-foreground">None</p>
           )}
-        </CardContent>
-      </Card>
-
-      {/* IOCs */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Hash className="w-4 h-4" />
-            Indicators of Compromise
-          </CardTitle>
-          <CardDescription>Extracted artifacts</CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-2 text-sm">
-          {stats && (
-            <p className="text-xs text-muted-foreground mb-2">
-              {stats.ips} IPs • {stats.urls} URLs • {stats.domains} domains • {stats.emails} emails
-            </p>
-          )}
-
-          <p><strong>IPs:</strong> {iocs.ips.length ? iocs.ips.join(', ') : 'None'}</p>
-          <p><strong>URLs:</strong> {iocs.urls.length ? iocs.urls.join(', ') : 'None'}</p>
-          <p><strong>Domains:</strong> {iocs.domains.length ? iocs.domains.join(', ') : 'None'}</p>
-          <p><strong>Emails:</strong> {iocs.emails.length ? iocs.emails.join(', ') : 'None'}</p>
         </CardContent>
       </Card>
 

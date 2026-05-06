@@ -38,17 +38,6 @@ export function AnalysisOverview({ data }: AnalysisOverviewProps) {
 
   return (
     <div>
-
-      {data.suspicious && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Suspicious File Detected</AlertTitle>
-          <AlertDescription>
-            This file contains indicators of malicious or unusual behavior.
-          </AlertDescription>
-        </Alert>
-      )}
-
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
@@ -95,6 +84,10 @@ export function AnalysisOverview({ data }: AnalysisOverviewProps) {
             <span className="text-xs text-muted-foreground">SHA-256</span>
             <p className="text-xs font-mono break-all">
               {data.hash.sha256}
+            </p>
+            <span className="text-xs text-muted-foreground">MD5</span>
+            <p className="text-xs font-mono break-all">
+              {data.hash.md5}
             </p>
           </div>
 
